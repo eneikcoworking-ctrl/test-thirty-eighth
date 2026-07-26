@@ -52,21 +52,22 @@ public class DeliverableReadinessTrackingTests {
             mockMvc.perform(get(url))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.completed", is(5)))
+                    .andExpect(jsonPath("$.completedCount", is(5)))
                     .andExpect(jsonPath("$.total", is(19)))
+                    .andExpect(jsonPath("$.totalCount", is(19)))
                     .andExpect(jsonPath("$.numerator", is(5)))
                     .andExpect(jsonPath("$.denominator", is(19)))
                     .andExpect(jsonPath("$.ratio", is(closeTo(0.26315, 0.001))))
-                    .andExpect(jsonPath("$.percentage", is(closeTo(26.315, 0.001))));
+                    .andExpect(jsonPath("$.percentage", is(closeTo(26.315, 0.001))))
+                    .andExpect(jsonPath("$.progress", is(closeTo(26.315, 0.001))));
         }
     }
 
     @Test
     public void testReadinessUpdatesDynamicallyOnCompletion() throws Exception {
         // Complete one more task
-        Deliverable task6 = deliverableRepository.findById("task-6")
-                .orElseThrow(() -> new AssertionError("Initial task-6 should exist"));
-        task6.setStatus("MERGED");
-        deliverableRepository.saveAndFlush(task6);
+        int updated = deliverableRepository.updateStatusAtomically("task-6", "PENDING", "MERGED");
+        assertThat(updated).isEqualTo(1);
 
         // Verify that completed count is now 6, and ratio is 6/19 (~31.57%)
         mockMvc.perform(get("/api/project/readiness"))
@@ -99,10 +100,8 @@ public class DeliverableReadinessTrackingTests {
         // Complete 25 more deliverables (5 initial + 25 = 30 completed)
         for (int i = 6; i <= 30; i++) {
             final int taskIdNum = i;
-            Deliverable t = deliverableRepository.findById("task-" + taskIdNum)
-                    .orElseThrow(() -> new AssertionError("Task should exist: task-" + taskIdNum));
-            t.setStatus("COMPLETED");
-            deliverableRepository.saveAndFlush(t);
+            int updated = deliverableRepository.updateStatusAtomically("task-" + taskIdNum, "PENDING", "COMPLETED");
+            assertThat(updated).isEqualTo(1);
         }
 
         // Verify denominator is 36, completed is 30, ratio is 30/36 (~83.33%)

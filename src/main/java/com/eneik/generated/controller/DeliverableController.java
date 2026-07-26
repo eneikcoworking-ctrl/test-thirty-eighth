@@ -40,11 +40,16 @@ public class DeliverableController {
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("completed", completed);
+        response.put("completedCount", completed);
+        response.put("completedTasks", completed);
         response.put("total", total);
+        response.put("totalCount", total);
+        response.put("totalTasks", total);
         response.put("numerator", completed);
         response.put("denominator", total);
         response.put("ratio", ratio);
         response.put("percentage", percentage);
+        response.put("progress", percentage);
         response.put("readiness", ratio);
         response.put("merged", completed);
         response.put("status", "success");
@@ -86,14 +91,18 @@ public class DeliverableController {
                 .orElseThrow(() -> new NoSuchElementException("Deliverable not found: " + id));
 
         if (request.getName() != null) {
-            deliverable.setName(request.getName());
+            deliverableRepository.updateNameById(id, request.getName());
         }
         if (request.getStatus() != null) {
-            deliverable.setStatus(request.getStatus());
+            int updated = deliverableRepository.updateStatusAtomically(id, deliverable.getStatus(), request.getStatus());
+            if (updated == 0) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).build();
+            }
         }
 
-        Deliverable saved = deliverableRepository.saveAndFlush(deliverable);
-        return ResponseEntity.ok(saved);
+        Deliverable updated = deliverableRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Deliverable not found after update: " + id));
+        return ResponseEntity.ok(updated);
     }
 
     @ExceptionHandler(NoSuchElementException.class)
