@@ -1,6 +1,8 @@
 <script>
   import { onMount } from 'svelte';
 
+  export let showHeader = true;
+
   // State variables matching the technical requirements and mockup
   let systemPrompt = "You are a highly capable {{assistant_role}}. Your primary goal is to assist the user by providing {{response_style}} answers.\n\nWhen the user asks about {{topic_focus}}, ensure that you provide accurate, data-driven information.\n\nConstraints:\n1. Always maintain a professional tone.\n2. If you are unsure of an answer, state it clearly.\n3. Use the context provided in {{context_payload}} to ground your responses.\n\nUser Name: {{user_name}}";
   let temperature = 0.7;
@@ -126,25 +128,27 @@
 
 <div class="bg-background text-on-background font-body-md min-h-screen flex flex-col">
   <!-- TopAppBar -->
-  <header class="w-full sticky top-0 bg-surface dark:bg-on-background border-b border-outline-variant dark:border-on-surface-variant flex items-center justify-between px-margin-mobile h-16 z-40">
-    <div class="flex items-center gap-stack-md">
-      <button class="p-2 -ml-2 text-primary hover:bg-surface-container-low transition-colors active:scale-95 duration-150 rounded-full flex items-center justify-center" aria-label="Go back">
-        <span class="material-symbols-outlined">arrow_back</span>
+  {#if showHeader}
+    <header class="w-full sticky top-0 bg-surface dark:bg-on-background border-b border-outline-variant dark:border-on-surface-variant flex items-center justify-between px-margin-mobile h-16 z-40">
+      <div class="flex items-center gap-stack-md">
+        <button class="p-2 -ml-2 text-primary hover:bg-surface-container-low transition-colors active:scale-95 duration-150 rounded-full flex items-center justify-center" aria-label="Go back">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">AI Persona Customization</h1>
+      </div>
+      <button
+        class="bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-label-md text-label-md font-bold hover:bg-opacity-90 active:scale-95 transition-all flex items-center gap-2"
+        on:click={handleSave}
+        disabled={saving}
+      >
+        {#if saving}
+          <span>Saving...</span>
+        {:else}
+          <span>Save</span>
+        {/if}
       </button>
-      <h1 class="font-headline-md text-headline-md font-bold text-primary dark:text-inverse-primary">AI Persona Customization</h1>
-    </div>
-    <button
-      class="bg-primary-container text-on-primary-container px-6 py-2 rounded-full font-label-md text-label-md font-bold hover:bg-opacity-90 active:scale-95 transition-all flex items-center gap-2"
-      on:click={handleSave}
-      disabled={saving}
-    >
-      {#if saving}
-        <span>Saving...</span>
-      {:else}
-        <span>Save</span>
-      {/if}
-    </button>
-  </header>
+    </header>
+  {/if}
 
   <!-- Notification Banner -->
   {#if saveSuccess}

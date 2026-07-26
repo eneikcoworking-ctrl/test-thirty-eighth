@@ -2,17 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  display: inline-block;
-  line-height: 1;
-  text-transform: none;
-  letter-spacing: normal;
-  word-wrap: normal;
-  white-space: nowrap;
-  direction: ltr;
+:root {
+  font-family: 'Inter', system-ui, sans-serif;
 }
-
 body {
-  min-height: max(884px, 100dvh);
+  background-color: #faf9ff;
+  color: #051a3e;
 }
