@@ -1,0 +1,70 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "5591bd1f-72e4-456b-bcad-b79d3c15ced5",
+      "title": "AI Dialogue Engine",
+      "jtbd": "When a lead replies to a cold message, I want the AI to conduct a natural conversation, so that unqualified leads are filtered and qualified ones are identified.",
+      "kanoClass": "Must-Be",
+      "cynefinDomain": "complicated",
+      "sixSigmaMetric": "reduce prompt configuration error rate to <1%",
+      "tocConstraintRef": "ai-configuration-bottleneck",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Data schema must support storing configurable prompt templates containing AI persona, sales goal, tone of voice, product FAQs, and qualification rules",
+        "R2: API must allow reading and updating the prompt template configurations",
+        "R3: Svelte frontend must provide a UI for administrators to customize AI persona and related prompt settings"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "AI Persona Configuration Data Schema",
+          "roleTag": "BARCAN-TAG-08",
+          "jtbd": "When implementing data storage for this epic, I want a schema to save prompt configurations, so that AI agents can load persona settings dynamically",
+          "acceptanceCriteria": "Given a PostgreSQL database, When executing migrations, Then a new table is created via V1__create_prompt_config.sql.\nGiven the table exists, When inspecting it, Then it contains fields for persona, tone, FAQs, and qualification rules.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "db-schema-delivery",
+          "sixSigmaMetric": "reduce db schema migration errors to 0",
+          "hasUi": false,
+          "requirementRefs": ["R1"]
+        },
+        {
+          "title": "AI Persona API Contract",
+          "roleTag": "BARCAN-TAG-12",
+          "jtbd": "When implementing the API contract for this epic, I want to define endpoints for prompt config, so that backend and frontend can be developed in parallel",
+          "acceptanceCriteria": "Given the OpenAPI specification, When reviewing the document, Then GET and PUT endpoints for prompt configuration are defined in openapi.yaml.\nGiven the endpoints, When checking schemas, Then they strictly define fields for persona, sales goal, tone, FAQs, and qualification rules.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "api-contract-definition",
+          "sixSigmaMetric": "reduce API integration mismatches to 0",
+          "hasUi": false,
+          "requirementRefs": ["R2", "R3"]
+        },
+        {
+          "title": "AI Persona Backend API",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the backend for this epic, I want to expose endpoints for prompt configuration, so that the frontend can read and update persona settings",
+          "acceptanceCriteria": "Given a valid PUT request with prompt config data, When it is sent to the API, Then PromptConfigController.java processes and saves it.\nGiven a saved config, When a GET request is made, Then the API returns the correct JSON payload.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "backend-api-delivery",
+          "sixSigmaMetric": "maintain API response time under 200ms",
+          "hasUi": false,
+          "requirementRefs": ["R1", "R2"]
+        },
+        {
+          "title": "AI Persona Customization UI",
+          "roleTag": "BARCAN-TAG-11",
+          "jtbd": "When implementing the UI for this epic, I want a form to customize prompt templates, so that admins can easily define AI persona and rules",
+          "acceptanceCriteria": "Given the Svelte dashboard, When the user navigates to AI settings, Then PromptConfig.svelte renders the configuration form.\nGiven the form is filled, When submitted, Then the component sends a PUT request to the API and displays a success message.",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "frontend-ui-delivery",
+          "sixSigmaMetric": "reduce UI input validation errors by 100%",
+          "hasUi": true,
+          "requirementRefs": ["R2", "R3"]
+        }
+      ]
+    }
+  ]
+}
