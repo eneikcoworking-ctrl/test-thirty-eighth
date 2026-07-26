@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Campaign Manager - Step 1</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed-variant": "#3f465c",
+                    "on-secondary-container": "#fefcff",
+                    "on-surface-variant": "#45464d",
+                    "on-tertiary": "#ffffff",
+                    "secondary-container": "#2170e4",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-bright": "#f7f9fb",
+                    "on-secondary-fixed": "#001a42",
+                    "surface-variant": "#e0e3e5",
+                    "surface-tint": "#565e74",
+                    "on-tertiary-container": "#009668",
+                    "surface-container-low": "#f2f4f6",
+                    "on-primary-fixed": "#131b2e",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary": "#000000",
+                    "on-primary-container": "#7c839b",
+                    "on-surface": "#191c1e",
+                    "tertiary-fixed": "#6ffbbe",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-secondary-fixed-variant": "#004395",
+                    "on-background": "#191c1e",
+                    "primary-fixed-dim": "#bec6e0",
+                    "on-tertiary-fixed": "#002113",
+                    "primary-fixed": "#dae2fd",
+                    "on-secondary": "#ffffff",
+                    "background": "#f7f9fb",
+                    "error": "#ba1a1a",
+                    "outline-variant": "#c6c6cd",
+                    "tertiary-container": "#002113",
+                    "on-error": "#ffffff",
+                    "surface": "#f7f9fb",
+                    "surface-container-high": "#e6e8ea",
+                    "tertiary": "#000000",
+                    "inverse-primary": "#bec6e0",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "primary-container": "#131b2e",
+                    "secondary": "#0058be",
+                    "surface-container-highest": "#e0e3e5",
+                    "surface-dim": "#d8dadc",
+                    "error-container": "#ffdad6",
+                    "outline": "#76777d",
+                    "surface-container": "#eceef0",
+                    "secondary-fixed": "#d8e2ff",
+                    "inverse-surface": "#2d3133",
+                    "on-primary": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "unit": "4px",
+                    "section-gap": "32px",
+                    "gutter": "16px",
+                    "container-margin": "24px",
+                    "component-padding-y": "12px",
+                    "component-padding-x": "16px"
+            },
+            "fontFamily": {
+                    "body-md": ["Hanken Grotesk"],
+                    "body-lg": ["Hanken Grotesk"],
+                    "display-lg": ["Hanken Grotesk"],
+                    "status-label": ["Hanken Grotesk"],
+                    "headline-md": ["Hanken Grotesk"],
+                    "headline-sm": ["Hanken Grotesk"],
+                    "label-caps": ["JetBrains Mono"]
+            },
+            "fontSize": {
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "status-label": ["13px", {"lineHeight": "16px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #F8FAFC;
+        }
+        .step-active {
+            background-color: #0058be;
+            color: #ffffff;
+        }
+        .step-inactive {
+            background-color: #e0e3e5;
+            color: #45464d;
+        }
+        .glass-header {
+            backdrop-filter: blur(8px);
+            background: rgba(247, 249, 251, 0.8);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-background min-h-screen pb-32">
+<!-- Top Navigation Anchor -->
+<header class="flex items-center justify-between px-gutter h-14 w-full bg-surface sticky top-0 z-50 border-b border-surface-variant glass-header">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-primary hover:bg-surface-container-low p-2 rounded-full transition-colors active:opacity-70">arrow_back</button>
+<h1 class="font-headline-sm text-headline-sm font-semibold text-primary">Campaign Manager</h1>
+</div>
+<div class="hidden md:flex gap-6 items-center">
+<button class="font-label-caps text-label-caps text-secondary font-bold">Campaigns</button>
+<button class="font-label-caps text-label-caps text-on-surface-variant hover:text-secondary transition-colors">Dashboard</button>
+<button class="font-label-caps text-label-caps text-on-surface-variant hover:text-secondary transition-colors">Settings</button>
+</div>
+<button class="font-label-caps text-label-caps bg-secondary text-on-secondary px-4 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all">Save Draft</button>
+</header>
+<main class="max-w-[1440px] mx-auto px-gutter py-8 lg:py-12">
+<!-- Step Indicator -->
+<div class="mb-12 max-w-2xl mx-auto">
+<div class="flex justify-between items-center relative">
+<!-- Line background -->
+<div class="absolute h-[2px] bg-surface-variant top-1/2 left-0 w-full -z-10"></div>
+<!-- Step 1 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg step-active border-4 border-background">1</div>
+<span class="font-label-caps text-label-caps text-secondary font-bold">Details</span>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg step-inactive border-4 border-background">2</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Audience</span>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg step-inactive border-4 border-background">3</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Content</span>
+</div>
+<!-- Step 4 -->
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg step-inactive border-4 border-background">4</div>
+<span class="font-label-caps text-label-caps text-on-surface-variant">Schedule</span>
+</div>
+</div>
+</div>
+<!-- Form Canvas (Bento Layout Style) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Left Info Panel (Identity) -->
+<div class="lg:col-span-4 space-y-6">
+<div class="bg-white border border-outline-variant p-6 rounded-xl shadow-sm">
+<div class="aspect-square w-16 bg-secondary-container rounded-lg flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-white text-3xl">add_chart</span>
+</div>
+<h2 class="font-headline-md text-headline-md mb-2">Campaign Identity</h2>
+<p class="font-body-md text-on-surface-variant">Define the core parameters of your orchestration. This information will help track campaign performance across your workspace.</p>
+</div>
+<!-- Visual Decoration for Efficiency Mood -->
+<div class="relative overflow-hidden rounded-xl bg-primary-container h-48 flex items-center justify-center">
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0); background-size: 24px 24px;"></div>
+<div class="z-10 text-center px-6">
+<span class="font-label-caps text-label-caps text-primary-fixed-dim uppercase tracking-widest block mb-2">Efficiency Insight</span>
+<p class="font-body-md text-white">Campaigns with descriptive goals see 14% higher engagement through clearer stakeholder alignment.</p>
+</div>
+</div>
+</div>
+<!-- Main Configuration Card -->
+<div class="lg:col-span-8">
+<div class="bg-white border border-outline-variant rounded-xl shadow-sm overflow-hidden">
+<!-- Card Header -->
+<div class="bg-surface-container-low px-8 py-4 border-b border-outline-variant">
+<span class="font-label-caps text-label-caps text-secondary">SECTION 01 / 04</span>
+</div>
+<!-- Form Content -->
+<div class="p-8 space-y-8">
+<!-- Campaign Name Field -->
+<div class="space-y-2">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="campaign-name">Campaign Name</label>
+<input class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:ring-2 focus:ring-secondary focus:border-secondary transition-all outline-none font-body-lg text-on-surface placeholder:text-outline-variant" id="campaign-name" placeholder="e.g., Q4 Customer Re-engagement 2024" type="text"/>
+<p class="font-body-md text-on-surface-variant text-xs italic">Choose a name that is unique and descriptive for your reports.</p>
+</div>
+<!-- Campaign Type Selection -->
+<div class="space-y-4">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase">Campaign Type</label>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Option: Email -->
+<label class="relative cursor-pointer group">
+<input checked="" class="peer sr-only" name="campaign_type" type="radio" value="email"/>
+<div class="flex flex-col items-center gap-3 p-6 border-2 border-outline-variant rounded-xl transition-all group-hover:border-secondary-fixed-dim peer-checked:border-secondary peer-checked:bg-secondary-fixed/10">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant peer-checked:text-secondary group-hover:scale-110 transition-transform">mail</span>
+<span class="font-body-md font-semibold">Email</span>
+</div>
+<div class="absolute top-3 right-3 hidden peer-checked:block">
+<span class="material-symbols-outlined text-secondary text-xl">check_circle</span>
+</div>
+</label>
+<!-- Option: SMS -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only" name="campaign_type" type="radio" value="sms"/>
+<div class="flex flex-col items-center gap-3 p-6 border-2 border-outline-variant rounded-xl transition-all group-hover:border-secondary-fixed-dim peer-checked:border-secondary peer-checked:bg-secondary-fixed/10">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant peer-checked:text-secondary group-hover:scale-110 transition-transform">sms</span>
+<span class="font-body-md font-semibold">SMS</span>
+</div>
+<div class="absolute top-3 right-3 hidden peer-checked:block">
+<span class="material-symbols-outlined text-secondary text-xl">check_circle</span>
+</div>
+</label>
+<!-- Option: Push -->
+<label class="relative cursor-pointer group">
+<input class="peer sr-only" name="campaign_type" type="radio" value="push"/>
+<div class="flex flex-col items-center gap-3 p-6 border-2 border-outline-variant rounded-xl transition-all group-hover:border-secondary-fixed-dim peer-checked:border-secondary peer-checked:bg-secondary-fixed/10">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant peer-checked:text-secondary group-hover:scale-110 transition-transform">notifications_active</span>
+<span class="font-body-md font-semibold">Push</span>
+</div>
+<div class="absolute top-3 right-3 hidden peer-checked:block">
+<span class="material-symbols-outlined text-secondary text-xl">check_circle</span>
+</div>
+</label>
+</div>
+</div>
+<!-- Goal Description -->
+<div class="space-y-2">
+<div class="flex justify-between">
+<label class="font-label-caps text-label-caps text-on-surface-variant block uppercase" for="campaign-goal">Campaign Goal</label>
+<span class="font-label-caps text-[10px] text-outline">Optional but recommended</span>
+</div>
+<textarea class="w-full px-4 py-3 rounded-lg border border-outline-variant focus:ring-2 focus:ring-secondary focus:border-secondary transition-all outline-none font-body-lg text-on-surface placeholder:text-outline-variant resize-none" id="campaign-goal" placeholder="What is the primary objective of this campaign?" rows="4"></textarea>
+</div>
+</div>
+<!-- Card Footer Actions -->
+<div class="bg-surface-container-low p-6 flex justify-end gap-4">
+<button class="px-6 py-3 font-body-md font-semibold text-on-surface-variant hover:bg-surface-container-high transition-colors rounded-lg">Cancel</button>
+<button class="px-8 py-3 bg-secondary text-on-secondary font-body-lg font-bold rounded-lg hover:opacity-90 active:scale-95 transition-all shadow-md flex items-center gap-2">
+                            Next: Audience Selection
+                            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav for Mobile -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center h-16 bg-surface border-t border-surface-variant z-50">
+<button class="flex flex-col items-center justify-center text-secondary font-bold active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">campaign</span>
+<span class="font-label-caps text-[10px] uppercase">Campaigns</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label-caps text-[10px] uppercase">Dashboard</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant active:scale-95 transition-transform duration-150">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-caps text-[10px] uppercase">Settings</span>
+</button>
+</nav>
+<script>
+        // Simple interactivity for the radio-like card selection
+        const radioCards = document.querySelectorAll('input[name="campaign_type"]');
+        radioCards.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                // Potential for haptic feedback or animations here
+                console.log(`Campaign type selected: ${e.target.value}`);
+            });
+        });
+
+        // Sticky header opacity scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('.glass-header');
+            if (window.scrollY > 20) {
+                header.classList.add('shadow-sm');
+            } else {
+                header.classList.remove('shadow-sm');
+            }
+        });
+    </script>
+</body></html>
