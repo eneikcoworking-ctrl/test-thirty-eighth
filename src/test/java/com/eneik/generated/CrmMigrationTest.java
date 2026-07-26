@@ -25,7 +25,7 @@ public class CrmMigrationTest {
         );
 
         assertThat(tables)
-            .contains("TELEGRAM_ACCOUNTS", "LEADS", "CHATS", "MESSAGES");
+            .contains("TELEGRAM_ACCOUNTS", "LEADS", "CHATS", "CRM_MESSAGES");
 
         // 2. Verify optimized index exists
         List<Map<String, Object>> indexes = jdbcTemplate.queryForList(
@@ -40,10 +40,17 @@ public class CrmMigrationTest {
         assertThat(viewColumns).isNotEmpty();
 
         // 4. Test insert and selection flow to guarantee unified inbox query correctness
-        jdbcTemplate.execute("INSERT INTO telegram_accounts (phone_number, session_status) VALUES ('+123456789', 'Active')");
+        jdbcTemplate.execute("INSERT INTO telegram_accounts (phone_number, status) VALUES ('+123456789', 'Active')");
         Long accountId = jdbcTemplate.queryForObject("SELECT id FROM telegram_accounts WHERE phone_number = '+123456789'", Long.class);
 
-        jdbcTemplate.execute("INSERT INTO leads (username, phone_number, status) VALUES ('lead_user', '+987654321', 'New')");
+        // Target list is required for leads table from V2
+        jdbcTemplate.execute("INSERT INTO target_lists (name) VALUES ('Test List')");
+        Long listId = jdbcTemplate.queryForObject("SELECT id FROM target_lists WHERE name = 'Test List'", Long.class);
+
+        jdbcTemplate.execute(String.format(
+            "INSERT INTO leads (target_list_id, username, phone_number, status) VALUES (%d, 'lead_user', '+987654321', 'New')",
+            listId
+        ));
         Long leadId = jdbcTemplate.queryForObject("SELECT id FROM leads WHERE username = 'lead_user'", Long.class);
 
         jdbcTemplate.execute(String.format(
@@ -53,7 +60,7 @@ public class CrmMigrationTest {
         Long chatId = jdbcTemplate.queryForObject("SELECT id FROM chats WHERE telegram_account_id = " + accountId, Long.class);
 
         jdbcTemplate.execute(String.format(
-            "INSERT INTO messages (chat_id, sender_type, text, sent_at) VALUES (%d, 'Lead', 'Hello, interest in product!', '2026-07-26 12:00:00')",
+            "INSERT INTO crm_messages (chat_id, sender_type, text, sent_at) VALUES (%d, 'Lead', 'Hello, interest in product!', '2026-07-26 12:00:00')",
             chatId
         ));
 
