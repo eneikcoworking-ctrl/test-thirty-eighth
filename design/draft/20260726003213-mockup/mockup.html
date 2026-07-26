@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Admin Portal - Health Overview</title>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-fixed-dim": "#dec29a",
+                    "on-secondary-fixed": "#001a42",
+                    "on-primary-fixed": "#131b2e",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed": "#dae2fd",
+                    "tertiary": "#000000",
+                    "on-secondary-fixed-variant": "#004395",
+                    "secondary-fixed-dim": "#adc6ff",
+                    "outline": "#76777d",
+                    "secondary-container": "#2170e4",
+                    "on-primary-container": "#7c839b",
+                    "surface-container-highest": "#d3e4fe",
+                    "inverse-primary": "#bec6e0",
+                    "on-error-container": "#93000a",
+                    "inverse-surface": "#213145",
+                    "on-surface-variant": "#45464d",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed": "#fcdeb5",
+                    "surface-tint": "#565e74",
+                    "surface-bright": "#f8f9ff",
+                    "error": "#ba1a1a",
+                    "background": "#f8f9ff",
+                    "surface-dim": "#cbdbf5",
+                    "surface-container": "#e5eeff",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#c6c6cd",
+                    "on-secondary-container": "#fefcff",
+                    "primary": "#000000",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "on-surface": "#0b1c30",
+                    "error-container": "#ffdad6",
+                    "secondary-fixed": "#d8e2ff",
+                    "surface": "#f8f9ff",
+                    "on-tertiary-container": "#98805d",
+                    "on-tertiary-fixed": "#271901",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-secondary": "#ffffff",
+                    "on-background": "#0b1c30",
+                    "primary-container": "#131b2e",
+                    "on-tertiary-fixed-variant": "#574425",
+                    "primary-fixed-dim": "#bec6e0",
+                    "tertiary-container": "#271901",
+                    "surface-container-low": "#eff4ff",
+                    "surface-container-high": "#dce9ff",
+                    "secondary": "#0058be",
+                    "surface-variant": "#d3e4fe"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xs": "4px",
+                    "lg": "24px",
+                    "sm": "8px",
+                    "margin-desktop": "32px",
+                    "base": "4px",
+                    "md": "16px",
+                    "margin-mobile": "16px",
+                    "xl": "32px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "display-lg": ["Inter"],
+                    "body-md": ["Inter"],
+                    "display-lg-mobile": ["Inter"],
+                    "label-xs": ["Inter"],
+                    "label-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "display-lg-mobile": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "label-xs": ["11px", {"lineHeight": "14px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface dark:bg-background shadow-sm flex justify-between items-center w-full px-margin-mobile md:px-margin-desktop h-16 transition-all duration-200">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-inverse-primary cursor-pointer active:scale-95 transition-transform" data-icon="arrow_back">arrow_back</span>
+<h1 class="text-headline-md font-headline-md text-primary dark:text-inverse-primary">Admin Portal</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex gap-6 items-center px-4">
+<span class="text-primary dark:text-inverse-primary font-semibold cursor-pointer text-body-md font-body-md">Overview</span>
+<span class="text-on-surface-variant dark:text-outline hover:bg-surface-container-low dark:hover:bg-inverse-surface px-3 py-1 rounded transition-colors cursor-pointer text-body-md font-body-md">Systems</span>
+<span class="text-on-surface-variant dark:text-outline hover:bg-surface-container-low dark:hover:bg-inverse-surface px-3 py-1 rounded transition-colors cursor-pointer text-body-md font-body-md">Reports</span>
+</div>
+<div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold shadow-sm">
+                AU
+            </div>
+</div>
+</header>
+<!-- Side Navigation (Desktop Only) -->
+<aside class="hidden md:flex fixed inset-y-0 left-0 z-50 flex-col h-full h-full w-72 rounded-r-xl bg-surface dark:bg-surface-container-low shadow-xl mt-16">
+<div class="p-6 border-b border-outline-variant">
+<h2 class="text-headline-md font-headline-md text-primary">Account Manager</h2>
+<p class="text-label-sm font-label-sm text-on-surface-variant">Enterprise Admin</p>
+</div>
+<nav class="flex-1 py-4 overflow-y-auto">
+<div class="bg-secondary-container text-on-secondary-container rounded-lg mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="text-body-md font-body-md">Overview</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-body-md font-body-md">Settings</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="history_edu">history_edu</span>
+<span class="text-body-md font-body-md">Logs</span>
+</div>
+<div class="text-on-surface-variant hover:bg-surface-container-high mx-2 my-1 px-4 py-2 flex items-center gap-3 transition-colors duration-200 cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span class="text-body-md font-body-md">Help</span>
+</div>
+</nav>
+<div class="p-4 border-t border-outline-variant">
+<span class="text-label-xs font-label-xs text-outline">v1.0.2</span>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="pt-20 pb-24 md:pb-8 md:pl-80 px-margin-mobile md:px-margin-desktop min-h-screen">
+<!-- Header Section -->
+<div class="mb-lg flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<h2 class="text-display-lg-mobile md:text-display-lg font-display-lg text-on-surface">Health Overview</h2>
+<p class="text-body-md font-body-md text-on-surface-variant">System status and critical account health metrics for today.</p>
+</div>
+<button class="bg-secondary text-on-secondary px-6 py-2.5 rounded-lg flex items-center gap-2 font-semibold shadow-sm hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+<span>Generate Report</span>
+</button>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Health Chart Card -->
+<div class="md:col-span-8 bg-surface-container-lowest glass-card rounded-xl shadow-sm p-lg flex flex-col justify-between min-h-[400px]">
+<div class="flex justify-between items-start mb-md">
+<div>
+<h3 class="text-headline-md font-headline-md text-primary">System Vitality</h3>
+<p class="text-label-sm font-label-sm text-outline">Real-time aggregate health score</p>
+</div>
+<span class="material-symbols-outlined text-outline cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+<!-- Chart Area -->
+<div class="flex-1 flex flex-col md:flex-row items-center justify-center gap-lg">
+<!-- Pie Chart Simulation -->
+<div class="relative w-48 h-48 md:w-64 md:h-64 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<circle cx="18" cy="18" fill="transparent" r="16" stroke="#E2E8F0" stroke-width="4"></circle>
+<circle cx="18" cy="18" fill="transparent" r="16" stroke="#0058be" stroke-dasharray="75, 100" stroke-width="4"></circle>
+<circle cx="18" cy="18" fill="transparent" r="16" stroke="#ba1a1a" stroke-dasharray="10, 100" stroke-dashoffset="-75" stroke-width="4"></circle>
+<circle cx="18" cy="18" fill="transparent" r="16" stroke="#dec29a" stroke-dasharray="15, 100" stroke-dashoffset="-85" stroke-width="4"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-display-lg font-display-lg text-primary">82%</span>
+<span class="text-label-xs font-label-xs text-on-surface-variant">AVERAGE HEALTH</span>
+</div>
+</div>
+<!-- Stats Legend -->
+<div class="grid grid-cols-2 gap-md w-full md:w-auto">
+<div class="p-md bg-surface-container rounded-lg border border-outline-variant">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Healthy</span>
+</div>
+<p class="text-headline-md font-headline-md text-primary">1,240</p>
+</div>
+<div class="p-md bg-surface-container rounded-lg border border-outline-variant">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">At Risk</span>
+</div>
+<p class="text-headline-md font-headline-md text-primary">184</p>
+</div>
+<div class="p-md bg-surface-container rounded-lg border border-outline-variant">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-2.5 h-2.5 rounded-full bg-error"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Critical</span>
+</div>
+<p class="text-headline-md font-headline-md text-primary">32</p>
+</div>
+<div class="p-md bg-surface-container-low rounded-lg border border-outline-variant">
+<div class="flex items-center gap-2 mb-1">
+<span class="w-2.5 h-2.5 rounded-full bg-outline"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Total</span>
+</div>
+<p class="text-headline-md font-headline-md text-primary">1,456</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Actions Card -->
+<div class="md:col-span-4 flex flex-col gap-gutter">
+<div class="bg-primary-container text-on-primary rounded-xl p-lg shadow-lg relative overflow-hidden h-full flex flex-col justify-between">
+<div class="relative z-10">
+<h3 class="text-headline-md font-headline-md mb-2">Quick Actions</h3>
+<p class="text-on-primary-container text-body-md font-body-md">Streamlined operations for management.</p>
+</div>
+<div class="relative z-10 grid grid-cols-1 gap-3 mt-lg">
+<button class="flex items-center justify-between p-3 bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 rounded-lg transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+<span class="text-body-md font-body-md">Onboard New Account</span>
+</div>
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="flex items-center justify-between p-3 bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 rounded-lg transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="send">send</span>
+<span class="text-body-md font-body-md">Send Global Alert</span>
+</div>
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="flex items-center justify-between p-3 bg-surface-container-lowest/10 hover:bg-surface-container-lowest/20 rounded-lg transition-all">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+<span class="text-body-md font-body-md">Export Audit Log</span>
+</div>
+<span class="material-symbols-outlined text-sm" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+<!-- Decorative Element -->
+<div class="absolute -right-12 -bottom-12 opacity-10">
+<span class="material-symbols-outlined !text-[160px]" data-icon="bolt">bolt</span>
+</div>
+</div>
+</div>
+<!-- Recent Activity Card -->
+<div class="md:col-span-12 bg-surface-container-lowest glass-card rounded-xl shadow-sm overflow-hidden">
+<div class="p-lg flex justify-between items-center border-b border-outline-variant">
+<h3 class="text-headline-md font-headline-md text-primary">Recent Activity</h3>
+<button class="text-secondary font-semibold text-label-sm font-label-sm hover:underline">View All Activities</button>
+</div>
+<div class="divide-y divide-outline-variant">
+<!-- Activity Item 1 -->
+<div class="p-md flex items-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="warning">warning</span>
+</div>
+<div class="flex-1">
+<p class="text-body-md font-body-md text-on-surface"><strong>Critical Alert:</strong> Server 'Asia-East-1' latency exceeded threshold (450ms).</p>
+<p class="text-label-xs font-label-xs text-outline">2 minutes ago • Infrastructure</p>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-1 bg-surface-container-highest rounded text-on-surface-variant">High Priority</span>
+</div>
+<!-- Activity Item 2 -->
+<div class="p-md flex items-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+</div>
+<div class="flex-1">
+<p class="text-body-md font-body-md text-on-surface">New Account <strong>Global Finance Corp</strong> has been onboarded successfully.</p>
+<p class="text-label-xs font-label-xs text-outline">1 hour ago • CRM</p>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-1 bg-surface-container-highest rounded text-on-surface-variant">Onboarding</span>
+</div>
+<!-- Activity Item 3 -->
+<div class="p-md flex items-center gap-4 hover:bg-surface-container-low transition-colors cursor-pointer">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest text-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="edit">edit</span>
+</div>
+<div class="flex-1">
+<p class="text-body-md font-body-md text-on-surface">Policy update applied to <strong>14 enterprise accounts</strong> in EMEA region.</p>
+<p class="text-label-xs font-label-xs text-outline">4 hours ago • Security</p>
+</div>
+<span class="text-label-sm font-label-sm px-2 py-1 bg-surface-container-highest rounded text-on-surface-variant">System</span>
+</div>
+</div>
+</div>
+<!-- Graphic Element / Visual Flourish -->
+<div class="md:col-span-12 relative h-48 rounded-xl overflow-hidden shadow-sm">
+<div class="absolute inset-0 z-0" data-alt="A sophisticated, high-end abstract digital background for an enterprise dashboard. The image features smooth, deep navy and dark blue fluid gradients with subtle geometric light patterns and fine grid lines, suggesting complex data networks and security. The lighting is low-key and professional, with soft glowing highlights in primary blue to maintain a modern light-mode compatible atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD0k7L9-sEziOrWHEYace_q_Wa4K0WazbV6lPKzXJY02b8ucRLzNbAUQ0NtQtos_Ubw5WPgcmVp1gahCmPrm109RuQHo-prpcGYfRtCtyTxVTgZRqZgR0u2d8Q0YmqrR5CruHm8FgzmpWPqLYFtk9664nZ_xvjVBnLd9ZKGouEbhicn6Nk_anvxI5J44ubnOQ2uH5w2BpxpsWSRqsQDgP29Dp1K5ALkd3SHjevnlooM2DcmKO1ITPcBiLbBAsbTaQNZMinbdKKqP_As')"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-primary-container/80 to-transparent z-10 p-lg flex flex-col justify-center">
+<h4 class="text-on-primary text-headline-md font-headline-md">Enterprise Infrastructure Update</h4>
+<p class="text-on-primary-container text-body-md font-body-md max-w-lg mt-2">New security protocols are now active across all data centers. Check the updated compliance guidelines.</p>
+<button class="mt-4 w-fit bg-white text-primary px-6 py-2 rounded font-bold text-label-sm font-label-sm hover:bg-surface-container-lowest transition-colors">Read Docs</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-2 pt-2 bg-surface dark:bg-inverse-surface border-t border-outline-variant dark:border-outline shadow-lg z-50 h-16 transition-transform duration-150">
+<div class="flex flex-col items-center justify-center bg-secondary-container dark:bg-secondary text-on-secondary-container dark:text-on-secondary rounded-full px-4 py-1 active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-label-sm font-label-sm">Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:text-secondary dark:hover:text-secondary-fixed active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span class="text-label-sm font-label-sm">Accounts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant hover:text-secondary dark:hover:text-secondary-fixed active:scale-90 transition-transform">
+<span class="material-symbols-outlined" data-icon="person_add">person_add</span>
+<span class="text-label-sm font-label-sm">Onboard</span>
+</div>
+</nav>
+<!-- Floating Action Button (FAB) -->
+<button class="fixed bottom-20 right-6 md:bottom-10 md:right-10 w-14 h-14 bg-secondary text-on-secondary rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-40">
+<span class="material-symbols-outlined text-2xl" data-icon="bolt">bolt</span>
+</button>
+<script>
+        // Micro-interaction for hover states and transitions
+        document.querySelectorAll('.active\\:scale-95').forEach(el => {
+            el.addEventListener('mousedown', () => el.classList.add('scale-95'));
+            el.addEventListener('mouseup', () => el.classList.remove('scale-95'));
+        });
+    </script>
+</body></html>
