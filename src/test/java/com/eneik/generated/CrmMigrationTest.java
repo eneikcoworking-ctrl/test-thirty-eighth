@@ -60,7 +60,7 @@ public class CrmMigrationTest {
         ));
 
         // Query the unified inbox view to ensure data mapping operates flawlessly
-        List<Map<String, Object>> results = jdbcTemplate.queryForList("SELECT * FROM crm_unified_inbox_view");
+        List<Map<String, Object>> results = jdbcTemplate.queryForList("SELECT * FROM crm_unified_inbox_view WHERE telegram_account_id = " + accountId);
         assertThat(results).hasSize(1);
         Map<String, Object> record = results.get(0);
         assertThat(record.get("CHAT_STATUS")).isEqualTo("Unassigned");

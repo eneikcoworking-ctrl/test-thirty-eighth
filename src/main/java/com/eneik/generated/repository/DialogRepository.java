@@ -8,8 +8,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Repository
 public interface DialogRepository extends JpaRepository<Dialog, String> {
+    Optional<Dialog> findByLeadUsername(String leadUsername);
+    Optional<Dialog> findByLeadPhone(String leadPhone);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
