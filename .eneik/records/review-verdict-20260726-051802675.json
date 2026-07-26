@@ -1,0 +1,10 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "block",
+      "criticalReason": "PR deletes files under the .eneik/ directory and commits a .png file (frontend/src/assets/hero.png), directly contradicting the task boundaries.",
+      "concerns": []
+    }
+  ]
+}

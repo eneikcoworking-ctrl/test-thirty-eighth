@@ -1,0 +1,30 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "02e7f577-2015-4623-9951-accf8b1de798",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Fix the deliverable readiness tracking logic to ensure the merged tasks ratio accurately updates and resolves false stagnation warnings"
+      ],
+      "coverageComplete": true,
+      "sixSigmaMetric": "Reduce false project stagnation warnings to 0 incidents",
+      "tocConstraintRef": "Stakeholder reporting visibility",
+      "slices": [
+        {
+          "title": "Patch deliverable readiness tracking logic",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the metric fix for this epic, I want to ensure the readiness calculation logic dynamically evaluates actual merged tasks, so that accurate progress is consistently reported",
+          "acceptanceCriteria": "Given a deliverable is completed and merged, When the system evaluates deliverable readiness, Then the numerator of the metric correctly increments to match the database state.\nGiven the project observer fetches readiness status, When it processes the project state, Then the calculated ratio is updated, preventing stagnation warnings.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Accuracy of project status aggregation logic",
+          "sixSigmaMetric": "Achieve 0% discrepancy between actual merged deliverables and reported progress ratio",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}

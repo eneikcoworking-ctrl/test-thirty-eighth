@@ -232,8 +232,183 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /dialogs:
+    get:
+      summary: Get all dialogs
+      description: Returns a list of all active or paused chat dialogues with leads.
+      responses:
+        '200':
+          description: List of dialogs retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DialogDTO'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dialogs/{id}:
+    get:
+      summary: Get details of a specific dialog
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dialog details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DialogDTO'
+        '404':
+          description: Dialog not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dialogs/{id}/messages:
+    get:
+      summary: Get messages for a dialog
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageDTO'
+        '404':
+          description: Dialog not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dialogs/{id}/override:
+    post:
+      summary: Manual reply override from an operator
+      description: Pauses the AI dialogue engine state and dispatches a manual reply message via the assigned Telegram account session.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperatorOverrideRequest'
+      responses:
+        '201':
+          description: Operator message successfully dispatched and saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageDTO'
+        '400':
+          description: Invalid request payload or missing assigned Telegram session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Dialog not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Concurrent state update conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
+    DialogDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        telegramChatId:
+          type: integer
+          format: int64
+        leadUsername:
+          type: string
+        leadPhone:
+          type: string
+        aiState:
+          type: string
+        status:
+          type: string
+        telegramAccountId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MessageDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        dialogId:
+          type: string
+        senderType:
+          type: string
+          example: "OPERATOR"
+        content:
+          type: string
+        telegramMessageId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+
+    OperatorOverrideRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: The plain text message content to send to the lead.
+          example: "Hi! This is the senior manager hijacking the conversation."
+        telegramAccountId:
+          type: integer
+          format: int64
+          description: Optional Telegram Account ID to associate / override on the dialog.
+
     CampaignCreateUpdateDTO:
       type: object
       required:
