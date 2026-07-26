@@ -1,74 +1,18 @@
 <script>
-  import AccountDashboard from './lib/AccountDashboard.svelte';
-  import AccountOnboardForm from './lib/AccountOnboardForm.svelte';
+  import AccountDashboard from "./lib/AccountDashboard.svelte";
+  import AccountOnboardForm from "./lib/AccountOnboardForm.svelte";
+  import AIPromptEditor from "./lib/AIPromptEditor.svelte";
 
-  // Application routing / view state
-  // 'dashboard': Account Management Dashboard (Default)
-  // 'campaigns': Existing Campaign Wizard
-  // 'onboard': Account Onboarding Form
-  let currentView = 'dashboard';
+  // Navigation State
+  let activeTab = "accounts"; // "accounts", "campaigns", or "aiPersona"
+  $: pageTitle = activeTab === "accounts"
+    ? "Accounts Center"
+    : activeTab === "campaigns"
+      ? "Campaign Setup"
+      : "AI Persona";
 
-  // Global Svelte State for Telegram Accounts pool
-  let accounts = [
-    {
-      phone_number: '+44 7911 123456',
-      username: '@uk_crypto_agent',
-      status: 'ACTIVE',
-      daily_limit: 15,
-      proxy: {
-        host: '185.220.101.5',
-        port: 1080,
-        protocol: 'SOCKS5',
-        username: 'socks_user',
-        password: ''
-      },
-      behavior_emulation: { random_pauses: true, typing_signal: true },
-      onboarded_at: '2026-07-20T10:30:00Z'
-    },
-    {
-      phone_number: '+1 202 555 0143',
-      username: '@us_growth_bot',
-      status: 'TEMPORARY_SPAM_BLOCK',
-      daily_limit: 20,
-      proxy: {
-        host: '45.89.22.180',
-        port: 8080,
-        protocol: 'HTTP',
-        username: '',
-        password: ''
-      },
-      behavior_emulation: { random_pauses: true, typing_signal: false },
-      onboarded_at: '2026-07-22T14:15:00Z'
-    },
-    {
-      phone_number: '+49 172 9876543',
-      username: '@de_alpha_lead',
-      status: 'RE_AUTHORIZATION_REQUIRED',
-      daily_limit: 15,
-      proxy: {
-        host: '92.118.13.44',
-        port: 1080,
-        protocol: 'SOCKS5',
-        username: 'admin',
-        password: 'password'
-      },
-      behavior_emulation: { random_pauses: false, typing_signal: true },
-      onboarded_at: '2026-07-24T09:00:00Z'
-    }
-  ];
-
-  function handleOnboarded(event) {
-    const newAcc = event.detail;
-    accounts = [...accounts, newAcc];
-    currentView = 'dashboard';
-  }
-
-  function handleUpdateAccounts(event) {
-    accounts = event.detail;
-  }
-
-  // --- Campaign Setup State Variables ---
-  let currentCampaignStep = 1; // 1: Basics, 2: Audience, 3: Content
+  // STATE FOR CAMPAIGN SETUP (Tab: "campaigns")
+  let currentStep = 1; // 1: Basics, 2: Audience, 3: Content
 
   // Step 1: Basics fields
   let campaignName = "Crypto Dev Outreach Q3";
@@ -130,8 +74,8 @@
 
   // Navigation handlers
   function handleNext() {
-    if (currentCampaignStep < 3) {
-      currentCampaignStep += 1;
+    if (currentStep < 3) {
+      currentStep += 1;
     } else {
       handleSaveCampaign();
     }
@@ -139,12 +83,12 @@
 
   // Go to step directly
   function goToStep(step) {
-    currentCampaignStep = step;
+    currentStep = step;
   }
 
   function handleBack() {
-    if (currentCampaignStep > 1) {
-      currentCampaignStep -= 1;
+    if (currentStep > 1) {
+      currentStep -= 1;
     }
   }
 
@@ -256,125 +200,594 @@
       saveSuccess = true;
     }, 1200);
   }
+
+
+  // STATE FOR ACCOUNT MANAGEMENT DASHBOARD (Tab: "accounts")
+  let accounts = [
+    { id: 1, phoneNumber: "+12025550143", username: "stellar_bot", status: "ACTIVE", proxy: "SOCKS5://185.230.124.52:1080", dailyLimit: 15, isWarmedUp: true, currentTrustScore: 9.2, company: "Stellar Dynamics", joined: "Oct 2023" },
+    { id: 2, phoneNumber: "+13125550198", username: "omnicorp_bot", status: "TEMPORARY_SPAM_BLOCK", proxy: "HTTP://192.168.12.100:8080", dailyLimit: 12, isWarmedUp: true, currentTrustScore: 4.8, company: "OmniCorp Systems", joined: "Jan 2024" },
+    { id: 3, phoneNumber: "+14155550112", username: "nebula_bot", status: "RE_AUTHORIZATION_REQUIRED", proxy: "None", dailyLimit: 0, isWarmedUp: false, currentTrustScore: 0.0, company: "Nebula Labs", joined: "Onboarding" },
+    { id: 4, phoneNumber: "+16175550175", username: "biopharma_bot", status: "ACTIVE", proxy: "SOCKS5://45.138.22.105:1080", dailyLimit: 20, isWarmedUp: true, currentTrustScore: 8.9, company: "BioPharma Ltd", joined: "May 2022" },
+    { id: 5, phoneNumber: "+17185550121", username: "vertex_bot", status: "PERMANENT_BAN", proxy: "SOCKS5://93.115.26.11:1080", dailyLimit: 0, isWarmedUp: false, currentTrustScore: 1.5, company: "Vertex Finance", joined: "Sept 2023" }
+  ];
+
+  let searchQuery = "";
+  let selectedFilter = "all"; // "all", "ACTIVE", "TEMPORARY_SPAM_BLOCK", "RE_AUTHORIZATION_REQUIRED", "PERMANENT_BAN"
+  let showAccountOnboard = false;
+
+  $: filteredAccounts = accounts.filter(acc => {
+    // Filter by status
+    if (selectedFilter !== "all" && acc.status !== selectedFilter) return false;
+    // Filter by search query
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase();
+      return (
+        acc.username?.toLowerCase().includes(query) ||
+        acc.phoneNumber?.toLowerCase().includes(query) ||
+        acc.company?.toLowerCase().includes(query)
+      );
+    }
+    return true;
+  });
+
+  // Onboarding Modal and Forms
+  let showOnboardModal = false;
+  let onboardMethod = "otp"; // "otp" or "file"
+
+  // Form Fields
+  let onboardPhone = "";
+  let onboardUsername = "";
+  let otpSent = false;
+  let onboardOtp = "";
+  let otpSending = false;
+  let otpVerifying = false;
+  let fileUploading = false;
+  let uploadSuccessMessage = "";
+  let onboardError = "";
+  let onboardSuccess = false;
+
+  // Proxy Settings
+  let useProxy = true;
+  let proxyProtocol = "SOCKS5";
+  let proxyHost = "";
+  let proxyPort = "";
+  let proxyUser = "";
+  let proxyPass = "";
+
+  // Session upload file state
+  let sessionFiles = [];
+  let sessionFileError = "";
+
+  function handleSendOtp() {
+    if (!onboardPhone) {
+      onboardError = "Phone number is required for OTP onboarding.";
+      return;
+    }
+    onboardError = "";
+    otpSending = true;
+
+    // Simulate requesting OTP from Telegram API
+    setTimeout(() => {
+      otpSending = false;
+      otpSent = true;
+    }, 1000);
+  }
+
+  function handleVerifyOtp() {
+    if (!onboardOtp) {
+      onboardError = "Please enter the verification code.";
+      return;
+    }
+    onboardError = "";
+    otpVerifying = true;
+
+    // Simulate OTP verification and session storage
+    setTimeout(() => {
+      otpVerifying = false;
+
+      let proxyString = "None";
+      if (useProxy && proxyHost && proxyPort) {
+        proxyString = `${proxyProtocol}://${proxyHost}:${proxyPort}`;
+      }
+
+      // Add account to state
+      const newAcc = {
+        id: accounts.length + 1,
+        phoneNumber: onboardPhone,
+        username: onboardUsername || "new_tg_account",
+        status: "ACTIVE",
+        proxy: proxyString,
+        dailyLimit: 15,
+        isWarmedUp: false,
+        currentTrustScore: 5.0,
+        company: "Personal Onboarded",
+        joined: "Just Now"
+      };
+
+      accounts = [newAcc, ...accounts];
+      onboardSuccess = true;
+
+      // Close modal after success
+      setTimeout(() => {
+        closeOnboardModal();
+      }, 1500);
+    }, 1200);
+  }
+
+  function handleSessionDrop(event) {
+    event.preventDefault();
+    const files = event.dataTransfer?.files;
+    if (files && files.length > 0) {
+      processSessionFiles(files);
+    }
+  }
+
+  function handleSessionSelect(event) {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      processSessionFiles(files);
+    }
+  }
+
+  function processSessionFiles(files) {
+    const validFiles = Array.from(files).filter(f => f.name.endsWith('.session') || f.name.includes('tdata'));
+    if (validFiles.length === 0) {
+      sessionFileError = "Invalid file type. Please upload .session or tdata files.";
+      return;
+    }
+    sessionFileError = "";
+    fileUploading = true;
+
+    setTimeout(() => {
+      fileUploading = false;
+      sessionFiles = [...sessionFiles, ...validFiles];
+      uploadSuccessMessage = `Successfully parsed ${validFiles.length} session file(s).`;
+
+      // Automatically add them as active accounts
+      validFiles.forEach((file, index) => {
+        let proxyString = "None";
+        if (useProxy && proxyHost && proxyPort) {
+          proxyString = `${proxyProtocol}://${proxyHost}:${proxyPort}`;
+        }
+
+        const cleanName = file.name.replace('.session', '');
+        const mockPhone = `+1555${Math.floor(100000 + Math.random() * 900000)}`;
+
+        accounts = [{
+          id: accounts.length + 1,
+          phoneNumber: mockPhone,
+          username: cleanName,
+          status: "ACTIVE",
+          proxy: proxyString,
+          dailyLimit: 15,
+          isWarmedUp: true,
+          currentTrustScore: 7.2,
+          company: "Imported Session",
+          joined: "Just Now"
+        }, ...accounts];
+      });
+
+      onboardSuccess = true;
+      setTimeout(() => {
+        closeOnboardModal();
+      }, 1500);
+    }, 1500);
+  }
+
+  function openOnboardModal() {
+    showOnboardModal = true;
+    onboardPhone = "";
+    onboardUsername = "";
+    onboardOtp = "";
+    otpSent = false;
+    onboardSuccess = false;
+    onboardError = "";
+    sessionFiles = [];
+    sessionFileError = "";
+    uploadSuccessMessage = "";
+    proxyHost = "185.112.44.12";
+    proxyPort = "1080";
+    proxyUser = "";
+    proxyPass = "";
+  }
+
+  function closeOnboardModal() {
+    showOnboardModal = false;
+  }
+
+  function proxyToObject(proxy) {
+    if (!proxy || proxy === "None") return null;
+    if (typeof proxy !== "string") return proxy;
+
+    const [protocol = "SOCKS5", address = proxy] = proxy.split("://");
+    const [host = "", rawPort = ""] = address.split(":");
+    return {
+      protocol,
+      host,
+      port: Number(rawPort) || 1080,
+      username: "",
+      password: ""
+    };
+  }
+
+  function proxyToString(proxy) {
+    if (!proxy) return "None";
+    if (typeof proxy === "string") return proxy;
+    return `${proxy.protocol || "SOCKS5"}://${proxy.host || "127.0.0.1"}:${proxy.port || 1080}`;
+  }
+
+  function toAccountManagementShape(account) {
+    return {
+      ...account,
+      phone_number: account.phone_number || account.phoneNumber,
+      daily_limit: account.daily_limit || account.dailyLimit || 15,
+      proxy: proxyToObject(account.proxy),
+      onboarded_at: account.onboarded_at || account.joined || new Date().toISOString()
+    };
+  }
+
+  function fromAccountManagementShape(account) {
+    return {
+      id: account.id || accounts.length + 1,
+      phoneNumber: account.phoneNumber || account.phone_number,
+      username: (account.username || "new_tg_account").replace(/^@/, ""),
+      status: account.status || "ACTIVE",
+      proxy: proxyToString(account.proxy),
+      dailyLimit: account.dailyLimit || account.daily_limit || 15,
+      isWarmedUp: account.isWarmedUp ?? true,
+      currentTrustScore: account.currentTrustScore ?? 5.0,
+      company: account.company || "Onboarded Session",
+      joined: account.joined || account.onboarded_at || "Just Now"
+    };
+  }
+
+  $: accountManagementAccounts = accounts.map(toAccountManagementShape);
+
+  function openAccountOnboard() {
+    showAccountOnboard = true;
+  }
+
+  function closeAccountOnboard() {
+    showAccountOnboard = false;
+  }
+
+  function handleAccountOnboarded(event) {
+    accounts = [fromAccountManagementShape(event.detail), ...accounts];
+    showAccountOnboard = false;
+  }
+
+  function handleAccountUpdates(event) {
+    accounts = event.detail.map(fromAccountManagementShape);
+  }
 </script>
 
-<div class="min-h-screen flex flex-col md:flex-row bg-[#f8f9ff] text-[#0b1c30] font-body-md text-body-md">
+<div class="min-h-screen flex flex-col md:flex-row font-body-md text-body-md bg-surface text-on-surface">
 
-  <!-- Top App Bar Header -->
-  <header class="fixed top-0 left-0 w-full bg-white z-40 flex justify-between items-center h-16 px-6 border-b border-outline-variant shadow-sm transition-all duration-200">
-    <div class="flex items-center gap-4">
-      <span class="material-symbols-outlined text-primary cursor-pointer active:scale-95 transition-transform" data-icon="menu">menu</span>
-      <h1 class="text-headline-md font-headline-md text-primary font-semibold">LeadGen Bot Admin</h1>
+  <!-- Sidebar Navigation (Desktop) -->
+  <aside class="fixed inset-y-0 left-0 z-50 hidden md:flex flex-col py-6 h-full w-72 bg-surface border-r border-outline-variant">
+    <div class="px-6 mb-8">
+      <span class="font-headline-md text-headline-md font-black text-secondary select-none">Admin Center</span>
     </div>
+
+    <!-- User Profile Header -->
+    <div class="px-6 mb-8 flex items-center gap-3">
+      <div class="w-12 h-12 rounded-xl bg-surface-container-high overflow-hidden">
+        <img class="w-full h-full object-cover" alt="Administrator Headshot" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD239slOGd9LYv8iDfJzig1jytZ3HgInV8SsUJHTyGJ7I_s0R5BhChP54dgkrxo8CRH_6B0YhQMmMYXS-dsKiEfHiGLn5YrF6qx2D4o9TN6O1ShunqwjrOOevqwpBBq1_41swxJdCbOH8n9h8hc9KxJpfPYBHgn6bIKcd5GVqT8TgxGFrzxqKRaBe_qgNBaKyUauhgFh_m4SXR9JrubsQth0M7XjuA3RiMSWXaGPEHXYSiV1gC_JqBICzjcrSAWi0sQBRR9uw5KKks"/>
+      </div>
+      <div>
+        <p class="font-label-md text-label-md font-bold text-primary">Admin User</p>
+        <p class="text-xs text-on-surface-variant">System Administrator</p>
+      </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 space-y-1">
+      <button
+        on:click={() => activeTab = "accounts"}
+        class="w-[calc(100%-16px)] flex items-center gap-3 rounded-full mx-2 px-4 py-3 text-left transition-all duration-300
+          {activeTab === 'accounts' ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant font-medium hover:bg-surface-container-high'}"
+      >
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' {activeTab === 'accounts' ? 1 : 0};">manage_accounts</span>
+        <span class="font-label-md text-label-md">Account Overview</span>
+      </button>
+
+      <button
+        on:click={() => activeTab = "campaigns"}
+        class="w-[calc(100%-16px)] flex items-center gap-3 rounded-full mx-2 px-4 py-3 text-left transition-all duration-300
+          {activeTab === 'campaigns' ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant font-medium hover:bg-surface-container-high'}"
+      >
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' {activeTab === 'campaigns' ? 1 : 0};">dashboard</span>
+        <span class="font-label-md text-label-md">Campaign Setup</span>
+      </button>
+
+      <button
+        on:click={() => activeTab = "aiPersona"}
+        class="w-[calc(100%-16px)] flex items-center gap-3 rounded-full mx-2 px-4 py-3 text-left transition-all duration-300
+          {activeTab === 'aiPersona' ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant font-medium hover:bg-surface-container-high'}"
+      >
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' {activeTab === 'aiPersona' ? 1 : 0};">psychology</span>
+        <span class="font-label-md text-label-md">AI Persona</span>
+      </button>
+
+      <button
+        class="w-[calc(100%-16px)] flex items-center gap-3 rounded-full mx-2 px-4 py-3 text-left text-on-surface-variant font-medium hover:bg-surface-container-high transition-all duration-300"
+      >
+        <span class="material-symbols-outlined">monitor_heart</span>
+        <span class="font-label-md text-label-md">Health Metrics</span>
+      </button>
+
+      <button
+        class="w-[calc(100%-16px)] flex items-center gap-3 rounded-full mx-2 px-4 py-3 text-left text-on-surface-variant font-medium hover:bg-surface-container-high transition-all duration-300"
+      >
+        <span class="material-symbols-outlined">tune</span>
+        <span class="font-label-md text-label-md">Global Settings</span>
+      </button>
+    </nav>
+
+    <!-- Operational System Status -->
+    <div class="px-6 mt-auto">
+      <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+        <p class="font-label-sm text-label-sm text-on-surface-variant mb-2">System Status</p>
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-green-500"></div>
+          <span class="text-xs font-medium">All Services Operational</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Mobile Top Header App Bar -->
+  <header class="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-margin-mobile h-16 bg-surface border-b border-outline-variant md:left-72 md:w-[calc(100%-288px)]">
     <div class="flex items-center gap-4">
-      <div class="w-10 h-10 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold shadow-sm">
-        AD
+      <button class="md:hidden p-2 hover:bg-surface-container-low transition-colors active:opacity-80" aria-label="Menu">
+        <span class="material-symbols-outlined text-primary">menu</span>
+      </button>
+      <h1 class="font-headline-sm text-headline-sm font-bold text-primary select-none">
+        {pageTitle}
+      </h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="p-2 hover:bg-surface-container-low transition-colors active:opacity-80" aria-label="Search">
+        <span class="material-symbols-outlined text-primary">search</span>
+      </button>
+      <div class="hidden md:flex items-center gap-4 px-4">
+        <span class="font-label-md text-label-md text-on-surface-variant">v2.4.0</span>
+        <div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-xs select-none">AU</div>
       </div>
     </div>
   </header>
 
-  <!-- Sidebar Navigation (Desktop Only) -->
-  <aside class="hidden md:flex fixed inset-y-0 left-0 z-30 flex-col h-full w-64 bg-white border-r border-outline-variant shadow-sm pt-20">
-    <div class="p-4 border-b border-outline-variant">
-      <h2 class="text-body-lg font-bold text-primary">Operations</h2>
-      <p class="text-label-sm font-label-sm text-on-surface-variant">LeadGen Control Hub</p>
-    </div>
-    <nav class="flex-1 py-4 overflow-y-auto space-y-1 px-2" aria-label="Sidebar Navigation">
-      <button
-        on:click={() => currentView = 'dashboard'}
-        class="w-full text-left rounded-lg px-4 py-2.5 flex items-center gap-3 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary
-          {currentView === 'dashboard' || currentView === 'onboard' ? 'bg-secondary-container text-on-secondary-container font-semibold shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-low'}"
-      >
-        <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
-        <span class="text-body-md">Account Pool</span>
-      </button>
+  <!-- Main Scrollable Canvas Area -->
+  <main class="flex-grow pt-20 pb-28 md:pb-8 md:pl-72 w-full min-h-screen">
+    <div class="px-margin-mobile md:px-margin-desktop max-w-6xl mx-auto w-full">
 
-      <button
-        on:click={() => currentView = 'campaigns'}
-        class="w-full text-left rounded-lg px-4 py-2.5 flex items-center gap-3 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary
-          {currentView === 'campaigns' ? 'bg-secondary-container text-on-secondary-container font-semibold shadow-sm' : 'text-on-surface-variant hover:bg-surface-container-low'}"
-      >
-        <span class="material-symbols-outlined" data-icon="rocket_launch">rocket_launch</span>
-        <span class="text-body-md">Campaign Wizard</span>
-      </button>
-    </nav>
-    <div class="p-4 border-t border-outline-variant bg-surface-container-low/30">
-      <span class="text-label-xs font-label-xs text-outline font-semibold">v1.1.0 • Client Admin</span>
-    </div>
-  </aside>
+      <!-- ==================== VIEW 1: ACCOUNT MANAGEMENT DASHBOARD ==================== -->
+      {#if activeTab === "accounts"}
+        {#if showAccountOnboard}
+          <section class="animate-fadeIn mt-4" aria-label="Telegram account onboarding">
+            <AccountOnboardForm
+              on:onboard={handleAccountOnboarded}
+              on:cancel={closeAccountOnboard}
+            />
+          </section>
+        {:else}
+          <AccountDashboard
+            accounts={accountManagementAccounts}
+            on:onboardRequest={openAccountOnboard}
+            on:updateAccounts={handleAccountUpdates}
+          />
+        {/if}
 
-  <!-- Main Canvas Frame -->
-  <main class="flex-grow pt-24 pb-28 md:pb-12 md:pl-72 px-6 max-w-7xl mx-auto w-full transition-all duration-200">
+        {#if false}
+        <section class="animate-fadeIn mt-4" aria-labelledby="accounts-heading">
+          <!-- Heading Section -->
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 id="accounts-heading" class="font-headline-lg text-headline-lg text-primary font-black">Telegram Accounts</h2>
+              <p class="font-body-md text-body-md text-on-surface-variant">Onboard, configure, and monitor outreach campaign sessions.</p>
+            </div>
+            <div class="flex gap-3">
+              <button
+                on:click={openOnboardModal}
+                class="px-5 py-2.5 bg-secondary text-on-secondary font-bold text-label-md rounded-xl shadow-md shadow-secondary/20 hover:bg-secondary/90 transition-all flex items-center gap-2"
+              >
+                <span class="material-symbols-outlined text-[20px]">person_add</span>
+                Onboard Account
+              </button>
+            </div>
+          </div>
 
-    <!-- Conditional View Rendering -->
-    {#if currentView === 'dashboard'}
-      <AccountDashboard
-        {accounts}
-        on:onboardRequest={() => currentView = 'onboard'}
-        on:updateAccounts={handleUpdateAccounts}
-      />
-    {:else if currentView === 'onboard'}
-      <AccountOnboardForm
-        on:onboard={handleOnboarded}
-        on:cancel={() => currentView = 'dashboard'}
-      />
-    {:else if currentView === 'campaigns'}
-      <!-- EXISTING CAMPAIGN SETUP WIZARD VIEW -->
-      <div class="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h2 class="text-display-lg-mobile md:text-display-lg font-display-lg text-on-surface">Campaign Setup</h2>
-          <p class="text-body-md text-on-surface-variant">Configure outbound messages, load lead batches, and trigger campaigns.</p>
-        </div>
+          <!-- Live Search & Filtering Panel -->
+          <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-4 mb-8 shadow-sm flex flex-col gap-4">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+              <!-- Search box -->
+              <div class="relative w-full md:flex-grow">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+                <input
+                  bind:value={searchQuery}
+                  class="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant rounded-xl focus:ring-2 focus:ring-secondary focus:border-secondary outline-none transition-all text-sm"
+                  placeholder="Search by username, phone number or client company..."
+                  type="text"
+                />
+              </div>
 
-        <!-- Progress Stepper -->
-        <nav aria-label="Progress Stepper" class="py-2">
+              <!-- Filter chips status container -->
+              <div class="w-full md:w-auto flex flex-wrap gap-2 items-center">
+                <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider mr-2 select-none">Status:</span>
+                <button
+                  on:click={() => selectedFilter = "all"}
+                  class="px-4 py-1.5 rounded-full font-label-md text-xs whitespace-nowrap transition-all duration-200
+                    {selectedFilter === 'all' ? 'bg-secondary text-on-secondary shadow-sm font-semibold' : 'bg-surface border border-outline-variant text-on-surface-variant hover:bg-surface-container-low'}"
+                >
+                  All
+                </button>
+                <button
+                  on:click={() => selectedFilter = "ACTIVE"}
+                  class="px-4 py-1.5 rounded-full font-label-md text-xs whitespace-nowrap transition-all duration-200
+                    {selectedFilter === 'ACTIVE' ? 'bg-secondary text-on-secondary shadow-sm font-semibold' : 'bg-surface border border-outline-variant text-on-surface-variant hover:bg-surface-container-low'}"
+                >
+                  Active
+                </button>
+                <button
+                  on:click={() => selectedFilter = "TEMPORARY_SPAM_BLOCK"}
+                  class="px-4 py-1.5 rounded-full font-label-md text-xs whitespace-nowrap transition-all duration-200
+                    {selectedFilter === 'TEMPORARY_SPAM_BLOCK' ? 'bg-secondary text-on-secondary shadow-sm font-semibold' : 'bg-surface border border-outline-variant text-on-surface-variant hover:bg-surface-container-low'}"
+                >
+                  Spam-Block
+                </button>
+                <button
+                  on:click={() => selectedFilter = "RE_AUTHORIZATION_REQUIRED"}
+                  class="px-4 py-1.5 rounded-full font-label-md text-xs whitespace-nowrap transition-all duration-200
+                    {selectedFilter === 'RE_AUTHORIZATION_REQUIRED' ? 'bg-secondary text-on-secondary shadow-sm font-semibold' : 'bg-surface border border-outline-variant text-on-surface-variant hover:bg-surface-container-low'}"
+                >
+                  Pending/Re-auth
+                </button>
+                <button
+                  on:click={() => selectedFilter = "PERMANENT_BAN"}
+                  class="px-4 py-1.5 rounded-full font-label-md text-xs whitespace-nowrap transition-all duration-200
+                    {selectedFilter === 'PERMANENT_BAN' ? 'bg-secondary text-on-secondary shadow-sm font-semibold' : 'bg-surface border border-outline-variant text-on-surface-variant hover:bg-surface-container-low'}"
+                >
+                  Banned
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Accounts Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {#each filteredAccounts as acc (acc.id)}
+              <div class="bg-surface-container-lowest border border-outline-variant rounded-2xl p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 relative flex flex-col justify-between">
+                <div>
+                  <!-- Card Header Status Badge -->
+                  <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-surface-container-high flex items-center justify-center">
+                      <span class="material-symbols-outlined text-secondary">corporate_fare</span>
+                    </div>
+
+                    <!-- Health status labels with exact color-coding -->
+                    {#if acc.status === "ACTIVE"}
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-wider">
+                        <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                        Active / Healthy
+                      </span>
+                    {:else if acc.status === "TEMPORARY_SPAM_BLOCK"}
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-50 text-orange-700 text-[10px] font-bold uppercase tracking-wider">
+                        <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                        Spam-Block (At Risk)
+                      </span>
+                    {:else if acc.status === "RE_AUTHORIZATION_REQUIRED"}
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider">
+                        <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                        Re-Auth Required
+                      </span>
+                    {:else if acc.status === "PERMANENT_BAN"}
+                      <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-red-50 text-red-700 text-[10px] font-bold uppercase tracking-wider">
+                        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                        Permanent Ban
+                      </span>
+                    {/if}
+                  </div>
+
+                  <!-- Username and Details -->
+                  <h3 class="font-headline-sm text-headline-sm text-primary font-bold mb-1">@{acc.username}</h3>
+                  <p class="text-xs text-on-surface-variant font-medium mb-4">{acc.company} • {acc.phoneNumber}</p>
+
+                  <!-- Divider and Grid Stats -->
+                  <div class="grid grid-cols-2 gap-4 py-4 border-t border-b border-surface-variant my-4">
+                    <div>
+                      <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-0.5">Assigned Proxy</p>
+                      <p class="font-label-md text-xs font-semibold text-primary truncate max-w-full" title={acc.proxy}>
+                        {acc.proxy !== "None" ? acc.proxy.split('://')[1] || acc.proxy : "None Bound"}
+                      </p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider mb-0.5">Trust Score / Limit</p>
+                      <p class="font-label-md text-xs font-semibold text-primary">
+                        {acc.currentTrustScore ? acc.currentTrustScore + " / 10" : "N/A"} ({acc.dailyLimit} msg)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 flex gap-2">
+                  <button class="flex-1 py-2 bg-surface border border-outline-variant text-secondary font-bold text-xs rounded-xl hover:bg-secondary-container hover:text-on-secondary-container transition-colors active:scale-[0.98]">
+                    View Details
+                  </button>
+                  <button class="px-3 py-2 bg-surface border border-outline-variant text-error font-bold text-xs rounded-xl hover:bg-error-container/20 transition-colors active:scale-[0.98]" aria-label="Disconnect">
+                    <span class="material-symbols-outlined text-[18px]">power_off</span>
+                  </button>
+                </div>
+              </div>
+            {/each}
+
+            <!-- Onboarding Grid Box Placeholder -->
+            <button
+              on:click={openOnboardModal}
+              class="border-2 border-dashed border-outline-variant hover:border-secondary rounded-2xl p-6 flex flex-col items-center justify-center text-center bg-surface-container-low/30 hover:bg-surface-container-low transition-all cursor-pointer group"
+            >
+              <div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-outline scale-125">add</span>
+              </div>
+              <p class="font-headline-sm text-headline-sm text-primary font-bold">Onboard New Session</p>
+              <p class="font-body-sm text-body-sm text-on-surface-variant px-8 mt-1">Add Telegram account via OTP verification or session files upload.</p>
+            </button>
+          </div>
+        </section>
+        {/if}
+      {/if}
+
+      <!-- ==================== VIEW 2: CAMPAIGN SETUP WIZARD ==================== -->
+      {#if activeTab === "campaigns"}
+        <!-- Multi-Step Progress Stepper -->
+        <nav aria-label="Progress Stepper" class="mt-4 mb-8">
           <div class="flex justify-between items-center relative py-4">
             <div class="absolute h-[2px] bg-outline-variant w-full top-1/2 -translate-y-1/2 z-0"></div>
             <div
               class="absolute h-[2px] bg-primary top-1/2 -translate-y-1/2 z-0 transition-all duration-500"
-              style="width: {currentCampaignStep === 1 ? '16%' : currentCampaignStep === 2 ? '50%' : '100%'}">
+              style="width: {currentStep === 1 ? '16%' : currentStep === 2 ? '50%' : '100%'}">
             </div>
 
+            <!-- Step buttons -->
             <button
               on:click={() => goToStep(1)}
               type="button"
               class="relative z-10 flex flex-col items-center gap-1 focus:outline-none"
-              aria-current={currentCampaignStep === 1 ? "step" : undefined}>
-              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300
-                {currentCampaignStep >= 1 ? 'bg-primary text-on-primary ring-4 ring-primary/20' : 'bg-surface-container-high text-on-surface-variant'}">
+              aria-current={currentStep === 1 ? "step" : undefined}>
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-label-md transition-all duration-300
+                {currentStep >= 1 ? 'bg-primary text-on-primary ring-4 ring-primary/20' : 'bg-surface-container-high text-on-surface-variant'}">
                 1
               </div>
-              <span class="font-semibold text-label-sm text-primary">Basics</span>
+              <span class="font-label-sm text-label-sm {currentStep >= 1 ? 'text-primary font-semibold' : 'text-on-surface-variant'}">Basics</span>
             </button>
 
             <button
               on:click={() => goToStep(2)}
               type="button"
               class="relative z-10 flex flex-col items-center gap-1 focus:outline-none"
-              aria-current={currentCampaignStep === 2 ? "step" : undefined}>
-              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300
-                {currentCampaignStep >= 2 ? 'bg-primary text-on-primary ring-4 ring-primary/20' : 'bg-surface-container-high text-on-surface-variant'}">
+              aria-current={currentStep === 2 ? "step" : undefined}>
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-label-md transition-all duration-300
+                {currentStep >= 2 ? 'bg-primary text-on-primary ring-4 ring-primary/20' : 'bg-surface-container-high text-on-surface-variant'}">
                 2
               </div>
-              <span class="font-semibold text-label-sm text-primary">Audience</span>
+              <span class="font-label-sm text-label-sm {currentStep >= 2 ? 'text-primary font-semibold' : 'text-on-surface-variant'}">Audience</span>
             </button>
 
             <button
               on:click={() => goToStep(3)}
               type="button"
               class="relative z-10 flex flex-col items-center gap-1 focus:outline-none"
-              aria-current={currentCampaignStep === 3 ? "step" : undefined}>
-              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300
-                {currentCampaignStep >= 3 ? 'bg-primary text-on-primary ring-4 ring-primary/20' : 'bg-surface-container-high text-on-surface-variant'}">
+              aria-current={currentStep === 3 ? "step" : undefined}>
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-label-md transition-all duration-300
+                {currentStep >= 3 ? 'bg-primary text-on-primary ring-4 ring-primary/20' : 'bg-surface-container-high text-on-surface-variant'}">
                 3
               </div>
-              <span class="font-semibold text-label-sm text-primary">Content</span>
+              <span class="font-label-sm text-label-sm {currentStep >= 3 ? 'text-primary font-semibold' : 'text-on-surface-variant'}">Content</span>
             </button>
           </div>
         </nav>
 
         <!-- STEP 1: CAMPAIGN BASICS -->
-        {#if currentCampaignStep === 1}
+        {#if currentStep === 1}
           <section class="flex flex-col gap-6 animate-fadeIn" aria-labelledby="basics-heading">
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
               <div class="flex items-center gap-2 mb-6">
@@ -383,6 +796,7 @@
               </div>
 
               <div class="space-y-6">
+                <!-- Campaign Name -->
                 <div class="flex flex-col gap-2">
                   <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="campaign-name">Campaign Name</label>
                   <input
@@ -394,6 +808,7 @@
                   />
                 </div>
 
+                <!-- Objective Selection -->
                 <div class="flex flex-col gap-2">
                   <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="objective">Campaign Objective</label>
                   <div class="relative">
@@ -412,14 +827,14 @@
               </div>
             </div>
 
-            <!-- Channels -->
+            <!-- Channels Toggle Section -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
               <h2 class="font-label-md text-label-md text-on-surface-variant mb-4 ml-1">Delivery Channels</h2>
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <label class="flex items-center justify-between p-4 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer group">
                   <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">email</span>
-                    <span class="font-body-lg text-body-lg text-primary">Email</span>
+                    <span class="font-body-lg text-body-lg">Email</span>
                   </div>
                   <input
                     type="checkbox"
@@ -431,7 +846,7 @@
                 <label class="flex items-center justify-between p-4 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer group">
                   <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">sms</span>
-                    <span class="font-body-lg text-body-lg text-primary">SMS</span>
+                    <span class="font-body-lg text-body-lg">SMS</span>
                   </div>
                   <input
                     type="checkbox"
@@ -443,7 +858,7 @@
                 <label class="flex items-center justify-between p-4 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors cursor-pointer group">
                   <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">notifications_active</span>
-                    <span class="font-body-lg text-body-lg text-primary">Push</span>
+                    <span class="font-body-lg text-body-lg">Push</span>
                   </div>
                   <input
                     type="checkbox"
@@ -455,7 +870,7 @@
             </div>
 
             <!-- Schedule & Budget -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
                 <h2 class="font-label-md text-label-md text-on-surface-variant mb-6 ml-1">Schedule Range</h2>
                 <div class="flex flex-col gap-4">
@@ -498,12 +913,12 @@
         {/if}
 
         <!-- STEP 2: AUDIENCE -->
-        {#if currentCampaignStep === 2}
+        {#if currentStep === 2}
           <section class="flex flex-col gap-6 animate-fadeIn" aria-labelledby="audience-heading">
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
               <div class="flex items-center gap-2 mb-6">
                 <span class="material-symbols-outlined text-primary">groups</span>
-                <h2 id="audience-heading" class="font-headline-md text-headline-md text-primary">Target Audience Ingestion</h2>
+                <h2 id="audience-heading" class="font-headline-md text-headline-md text-primary">Target Audience Configuration</h2>
               </div>
 
               <div class="space-y-4 mb-6">
@@ -549,8 +964,10 @@
               </div>
             </div>
 
+            <!-- Ingestion area -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
               <h3 class="font-label-md text-label-md text-on-surface-variant mb-3 ml-1">Import Leads via CSV / TXT</h3>
+
               <div
                 on:dragover|preventDefault
                 on:drop={handleCsvDrop}
@@ -569,9 +986,6 @@
                 <p class="font-body-lg text-body-lg text-on-surface-variant text-center">
                   Drag and drop your <strong>.csv</strong> or <strong>.txt</strong> file here
                 </p>
-                <p class="text-xs text-outline mt-1 text-center">
-                  Columns: username, phone_number, first_name, last_name, metadata
-                </p>
               </div>
 
               {#if fileError}
@@ -582,86 +996,16 @@
               {/if}
 
               {#if uploadedFile}
-                <div class="p-3 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-lg text-xs mt-3 flex items-center justify-between">
+                <div class="p-3 bg-green-50 text-green-700 border border-green-200 rounded-lg text-xs mt-3 flex items-center justify-between">
                   <span>Uploaded: <strong>{uploadedFile.name}</strong></span>
-                  <button on:click={() => {uploadedFile = null; importSuccessMessage = ""; parsedLeads = [];}} class="text-emerald-800 hover:underline">Remove</button>
                 </div>
               {/if}
             </div>
-
-            <!-- Manual entry -->
-            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
-              <h3 class="font-label-md text-label-md text-on-surface-variant mb-3 ml-1">Add Lead Manually</h3>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="@username (Required)"
-                  bind:value={manualLeadUsername}
-                  class="h-10 border border-outline-variant rounded-lg px-3 focus:ring-2 focus:ring-primary bg-white outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Phone number"
-                  bind:value={manualLeadPhone}
-                  class="h-10 border border-outline-variant rounded-lg px-3 focus:ring-2 focus:ring-primary bg-white outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="First Name"
-                  bind:value={manualLeadFirstName}
-                  class="h-10 border border-outline-variant rounded-lg px-3 focus:ring-2 focus:ring-primary bg-white outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Last Name"
-                  bind:value={manualLeadLastName}
-                  class="h-10 border border-outline-variant rounded-lg px-3 focus:ring-2 focus:ring-primary bg-white outline-none"
-                />
-                <input
-                  type="text"
-                  placeholder="Metadata (JSON context)"
-                  bind:value={manualLeadMetadata}
-                  class="sm:col-span-2 h-10 border border-outline-variant rounded-lg px-3 focus:ring-2 focus:ring-primary bg-white outline-none"
-                />
-              </div>
-              <button
-                on:click={handleAddManualLead}
-                class="mt-4 h-10 px-6 bg-secondary text-on-primary rounded-lg font-label-md hover:bg-secondary/95 transition-all w-full sm:w-auto"
-              >
-                Add to Batch
-              </button>
-            </div>
-
-            {#if parsedLeads.length > 0}
-              <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm animate-fadeIn">
-                <h3 class="font-label-md text-label-md text-on-surface-variant mb-3">Current Batch Preview ({parsedLeads.length} leads)</h3>
-                <div class="overflow-x-auto max-h-40">
-                  <table class="w-full text-left text-xs">
-                    <thead>
-                      <tr class="bg-surface-container border-b border-outline-variant">
-                        <th class="p-2">Username</th>
-                        <th class="p-2">First Name</th>
-                        <th class="p-2">Phone</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {#each parsedLeads as lead}
-                        <tr class="border-b border-outline-variant/50">
-                          <td class="p-2 font-semibold text-primary">{lead.username}</td>
-                          <td class="p-2">{lead.firstName || "—"}</td>
-                          <td class="p-2">{lead.phoneNumber || "—"}</td>
-                        </tr>
-                      {/each}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            {/if}
           </section>
         {/if}
 
         <!-- STEP 3: CONTENT -->
-        {#if currentCampaignStep === 3}
+        {#if currentStep === 3}
           <section class="flex flex-col gap-6 animate-fadeIn" aria-labelledby="content-heading">
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
               <div class="flex items-center gap-2 mb-6">
@@ -673,78 +1017,48 @@
                 <div class="flex flex-col gap-2">
                   <div class="flex justify-between items-center ml-1">
                     <label class="font-label-md text-label-md text-on-surface-variant" for="spintax-editor">Spintax Message Template</label>
-                    <div class="flex gap-2">
-                      <span class="text-xs text-on-surface-variant">Insert:</span>
-                      <button on:click={() => insertVariable("first_name")} class="text-xs text-primary font-semibold hover:underline">{"{first_name}"}</button>
-                      <button on:click={() => insertVariable("username")} class="text-xs text-primary font-semibold hover:underline">{"{username}"}</button>
-                    </div>
                   </div>
-
                   <textarea
                     id="spintax-editor"
                     bind:value={spintaxTemplate}
                     class="w-full h-36 border border-outline-variant rounded-lg p-4 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all font-mono text-sm bg-white resize-none"
-                    placeholder="Template syntax example: &#123;Hi|Hello&#125; &#123;username&#125;"
                   ></textarea>
-
-                  {#if spintaxError}
-                    <div class="p-3 bg-error-container text-error rounded-lg text-xs flex items-center gap-2">
-                      <span class="material-symbols-outlined text-sm">warning</span>
-                      {spintaxError}
-                    </div>
-                  {/if}
                 </div>
 
-                <div class="p-4 border border-outline-variant rounded-lg bg-surface-container-low flex items-start gap-4">
+                <!-- LLM personalizer toggle option -->
+                <div class="p-4 border border-outline-variant rounded-lg bg-surface-container-low flex items-start gap-4 hover:border-primary transition-all">
                   <input
                     type="checkbox"
                     bind:checked={useLlmPersonalization}
                     id="llm-toggle"
-                    class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer mt-0.5"
+                    class="w-5 h-5 rounded border-outline-variant text-primary focus:ring-primary cursor-pointer"
                   />
-                  <div class="flex flex-col gap-1">
+                  <div>
                     <label for="llm-toggle" class="font-body-lg text-body-lg font-semibold text-primary cursor-pointer">
                       AI-Powered First-Offer Personalization
                     </label>
-                    <p class="text-xs text-on-surface-variant">
-                      Uses an LLM to dynamically rewrite spintax outreach offer based on public bio or custom metadata.
-                    </p>
                   </div>
-                </div>
-
-                <div class="flex flex-col gap-2">
-                  <label class="font-label-md text-label-md text-on-surface-variant ml-1" for="campaign-status">Initial Launch Status</label>
-                  <select
-                    id="campaign-status"
-                    bind:value={campaignStatus}
-                    class="w-full h-12 appearance-none border border-outline-variant rounded-lg px-4 focus:ring-2 focus:ring-primary bg-white outline-none"
-                  >
-                    <option value="DRAFT">Draft Mode (Save only)</option>
-                    <option value="ACTIVE">Active (Launch immediately)</option>
-                    <option value="PAUSED">Paused</option>
-                  </select>
                 </div>
               </div>
             </div>
 
             {#if saveSuccess}
-              <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex gap-3 items-center animate-fadeIn" role="alert">
-                <span class="material-symbols-outlined text-emerald-600">verified</span>
+              <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl flex gap-3 items-center animate-fadeIn" role="alert">
+                <span class="material-symbols-outlined text-green-600">verified</span>
                 <div>
                   <h4 class="font-bold text-sm">Campaign Saved Successfully!</h4>
-                  <p class="text-xs">Your campaign configurations have been persisted.</p>
                 </div>
               </div>
             {/if}
           </section>
         {/if}
 
-        <!-- Wizard Persistent Action Footer (rendered within main panel for Campaigns) -->
-        <footer class="mt-8 flex gap-4 max-w-lg mx-auto">
-          {#if currentCampaignStep > 1}
+        <!-- Footer actions for setup wizard -->
+        <footer class="mt-8 flex gap-4 max-w-lg mx-auto w-full">
+          {#if currentStep > 1}
             <button
               on:click={handleBack}
-              class="flex-1 h-12 bg-white border border-outline-variant rounded-lg text-on-surface-variant font-semibold hover:bg-surface-container-low transition-colors active:scale-95 flex items-center justify-center gap-1"
+              class="flex-1 h-12 bg-white border border-outline-variant rounded-lg text-on-surface-variant font-label-md hover:bg-surface-container-low transition-colors active:scale-95 flex items-center justify-center gap-1"
             >
               <span class="material-symbols-outlined text-[18px]">arrow_back</span>
               Back
@@ -754,44 +1068,332 @@
           <button
             on:click={handleNext}
             disabled={isSaving}
-            class="flex-[2] h-12 bg-primary text-on-primary rounded-lg font-bold shadow-md hover:opacity-95 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
+            class="flex-[2] h-12 bg-primary text-on-primary rounded-lg font-label-md shadow-md hover:bg-primary/95 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-50"
           >
             {#if isSaving}
-              <span class="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
               Processing...
-            {:else if currentCampaignStep < 3}
+            {:else if currentStep < 3}
               Continue
               <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
             {:else}
-              Save & Launch Campaign
+              Save Campaign
               <span class="material-symbols-outlined text-[18px]">rocket_launch</span>
             {/if}
           </button>
         </footer>
-      </div>
-    {/if}
+      {/if}
 
+      {#if activeTab === "aiPersona"}
+        <section class="animate-fadeIn mt-4" aria-labelledby="ai-persona-heading">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 id="ai-persona-heading" class="font-headline-lg text-headline-lg text-primary font-black">AI Persona</h2>
+              <p class="font-body-md text-body-md text-on-surface-variant">Tune system prompts, dynamic variables, and generation parameters for campaign conversations.</p>
+            </div>
+          </div>
+
+          <AIPromptEditor />
+        </section>
+      {/if}
+
+    </div>
   </main>
 
-  <!-- Bottom Navigation Bar (Mobile Only) -->
-  <nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center bg-white border-t border-outline-variant shadow-lg z-40 h-16 transition-all" aria-label="Mobile Navigation">
+  <!-- Persistent Mobile Bottom Navigation Bar (Mobile Only) -->
+  <nav class="fixed bottom-0 left-0 w-full z-40 flex justify-around items-center px-2 py-3 pb-safe bg-surface border-t border-outline-variant rounded-t-xl shadow-lg md:hidden">
     <button
-      on:click={() => currentView = 'dashboard'}
-      class="flex flex-col items-center justify-center flex-grow py-1 focus:outline-none focus:text-primary
-        {currentView === 'dashboard' || currentView === 'onboard' ? 'text-secondary' : 'text-on-surface-variant'}"
+      on:click={() => activeTab = "accounts"}
+      class="flex flex-col items-center justify-center rounded-full px-4 py-1.5 transition-transform duration-150
+        {activeTab === 'accounts' ? 'bg-primary/10 text-primary scale-105' : 'text-on-surface-variant'}"
+      aria-label="Accounts View"
     >
-      <span class="material-symbols-outlined">analytics</span>
-      <span class="text-[10px] font-bold">Accounts</span>
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' {activeTab === 'accounts' ? 1 : 0};">manage_accounts</span>
+      <span class="font-label-sm text-[10px] font-semibold mt-0.5">Accounts</span>
     </button>
+
     <button
-      on:click={() => currentView = 'campaigns'}
-      class="flex flex-col items-center justify-center flex-grow py-1 focus:outline-none focus:text-primary
-        {currentView === 'campaigns' ? 'text-secondary' : 'text-on-surface-variant'}"
+      on:click={() => activeTab = "campaigns"}
+      class="flex flex-col items-center justify-center rounded-full px-4 py-1.5 transition-transform duration-150
+        {activeTab === 'campaigns' ? 'bg-primary/10 text-primary scale-105' : 'text-on-surface-variant'}"
+      aria-label="Campaign Setup View"
     >
-      <span class="material-symbols-outlined">rocket_launch</span>
-      <span class="text-[10px] font-bold">Campaigns</span>
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' {activeTab === 'campaigns' ? 1 : 0};">dashboard</span>
+      <span class="font-label-sm text-[10px] font-semibold mt-0.5">Campaigns</span>
+    </button>
+
+    <button
+      on:click={() => activeTab = "aiPersona"}
+      class="flex flex-col items-center justify-center rounded-full px-4 py-1.5 transition-transform duration-150
+        {activeTab === 'aiPersona' ? 'bg-primary/10 text-primary scale-105' : 'text-on-surface-variant'}"
+      aria-label="AI Persona View"
+    >
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' {activeTab === 'aiPersona' ? 1 : 0};">psychology</span>
+      <span class="font-label-sm text-[10px] font-semibold mt-0.5">Persona</span>
     </button>
   </nav>
+
+  <!-- ==================== ONBOARDING MODAL ==================== -->
+  {#if showOnboardModal}
+    <div class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden border border-outline-variant flex flex-col max-h-[90vh]">
+
+        <!-- Modal Header -->
+        <header class="px-6 py-4 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+          <div>
+            <h3 id="modal-title" class="font-headline-sm text-lg font-bold text-primary">Onboard Telegram Account</h3>
+            <p class="text-xs text-on-surface-variant">Verify and bind a Telegram account to active proxies.</p>
+          </div>
+          <button on:click={closeOnboardModal} class="p-1 hover:bg-surface-container-high rounded-full transition-colors" aria-label="Close modal">
+            <span class="material-symbols-outlined text-primary">close</span>
+          </button>
+        </header>
+
+        <!-- Modal Body (Scrollable) -->
+        <div class="p-6 overflow-y-auto flex-grow space-y-6">
+
+          <!-- Tab selector for onboarding method -->
+          <div class="flex border-b border-outline-variant">
+            <button
+              on:click={() => onboardMethod = "otp"}
+              class="flex-1 py-3 font-semibold text-sm border-b-2 transition-all
+                {onboardMethod === 'otp' ? 'border-secondary text-secondary font-bold' : 'border-transparent text-on-surface-variant hover:text-primary'}"
+            >
+              OTP Verification Code
+            </button>
+            <button
+              on:click={() => onboardMethod = "file"}
+              class="flex-1 py-3 font-semibold text-sm border-b-2 transition-all
+                {onboardMethod === 'file' ? 'border-secondary text-secondary font-bold' : 'border-transparent text-on-surface-variant hover:text-primary'}"
+            >
+              Upload Session Files (.session / tdata)
+            </button>
+          </div>
+
+          <!-- Proxy Settings Sub-panel -->
+          <div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant">
+            <div class="flex items-center justify-between mb-3">
+              <label class="font-label-md text-sm font-bold text-primary flex items-center gap-2 cursor-pointer" for="use-proxy-checkbox">
+                <span class="material-symbols-outlined text-secondary">shield</span>
+                Isolated Proxy Binding (SOCKS5/HTTP)
+              </label>
+              <input
+                type="checkbox"
+                id="use-proxy-checkbox"
+                bind:checked={useProxy}
+                class="w-5 h-5 rounded text-secondary focus:ring-secondary cursor-pointer"
+              />
+            </div>
+
+            {#if useProxy}
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fadeIn">
+                <!-- Protocol selection -->
+                <div class="flex flex-col gap-1">
+                  <label for="proxy-protocol" class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Protocol</label>
+                  <select
+                    id="proxy-protocol"
+                    bind:value={proxyProtocol}
+                    class="h-10 border border-outline-variant rounded-lg px-2 bg-white text-xs"
+                  >
+                    <option value="SOCKS5">SOCKS5</option>
+                    <option value="HTTP">HTTP</option>
+                  </select>
+                </div>
+                <!-- Host -->
+                <div class="flex flex-col gap-1 sm:col-span-2">
+                  <label for="proxy-host" class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Host/IP</label>
+                  <input
+                    type="text"
+                    id="proxy-host"
+                    placeholder="e.g. 185.112.44.12"
+                    bind:value={proxyHost}
+                    class="h-10 border border-outline-variant rounded-lg px-3 bg-white text-xs"
+                  />
+                </div>
+                <!-- Port -->
+                <div class="flex flex-col gap-1">
+                  <label for="proxy-port" class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Port</label>
+                  <input
+                    type="text"
+                    id="proxy-port"
+                    placeholder="e.g. 1080"
+                    bind:value={proxyPort}
+                    class="h-10 border border-outline-variant rounded-lg px-3 bg-white text-xs"
+                  />
+                </div>
+                <!-- Username -->
+                <div class="flex flex-col gap-1">
+                  <label for="proxy-user" class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Proxy User</label>
+                  <input
+                    type="text"
+                    id="proxy-user"
+                    placeholder="Optional"
+                    bind:value={proxyUser}
+                    class="h-10 border border-outline-variant rounded-lg px-3 bg-white text-xs"
+                  />
+                </div>
+                <!-- Password -->
+                <div class="flex flex-col gap-1">
+                  <label for="proxy-pass" class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Proxy Password</label>
+                  <input
+                    type="password"
+                    id="proxy-pass"
+                    placeholder="Optional"
+                    bind:value={proxyPass}
+                    class="h-10 border border-outline-variant rounded-lg px-3 bg-white text-xs"
+                  />
+                </div>
+              </div>
+            {/if}
+          </div>
+
+          <!-- Method 1: OTP Verification -->
+          {#if onboardMethod === "otp"}
+            <div class="space-y-4 animate-fadeIn">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1">
+                  <label for="onboard-phone" class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Phone Number (International)</label>
+                  <input
+                    type="tel"
+                    id="onboard-phone"
+                    placeholder="e.g. +12025550143"
+                    bind:value={onboardPhone}
+                    disabled={otpSent}
+                    class="h-11 border border-outline-variant rounded-lg px-3 bg-white text-sm"
+                  />
+                </div>
+                <div class="flex flex-col gap-1">
+                  <label for="onboard-username" class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Desired Username (Optional)</label>
+                  <input
+                    type="text"
+                    id="onboard-username"
+                    placeholder="e.g. outreach_pro"
+                    bind:value={onboardUsername}
+                    disabled={otpSent}
+                    class="h-11 border border-outline-variant rounded-lg px-3 bg-white text-sm"
+                  />
+                </div>
+              </div>
+
+              <!-- Send OTP Trigger -->
+              {#if !otpSent}
+                <button
+                  on:click={handleSendOtp}
+                  disabled={otpSending}
+                  class="w-full h-11 bg-primary text-on-primary font-bold text-sm rounded-lg hover:bg-primary/95 transition-all flex items-center justify-center gap-2"
+                >
+                  {#if otpSending}
+                    Requesting OTP...
+                  {:else}
+                    Send Verification OTP Code
+                  {/if}
+                </button>
+              {:else}
+                <!-- OTP Input Area -->
+                <div class="p-4 bg-green-50 border border-green-200 rounded-xl space-y-3 animate-fadeIn">
+                  <p class="text-xs text-green-800 font-medium flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">sms</span>
+                    OTP sent to {onboardPhone}. Check your Telegram active sessions.
+                  </p>
+                  <div class="flex flex-col gap-1">
+                    <label for="onboard-otp" class="text-xs font-bold text-on-surface-variant uppercase tracking-wider">Enter OTP Code</label>
+                    <input
+                      type="text"
+                      id="onboard-otp"
+                      placeholder="e.g. 48392"
+                      bind:value={onboardOtp}
+                      class="h-11 border border-outline-variant rounded-lg px-3 bg-white text-sm font-mono tracking-widest text-center"
+                    />
+                  </div>
+                  <button
+                    on:click={handleVerifyOtp}
+                    disabled={otpVerifying}
+                    class="w-full h-11 bg-secondary text-on-secondary font-bold text-sm rounded-lg hover:bg-secondary/95 transition-all flex items-center justify-center gap-2"
+                  >
+                    {#if otpVerifying}
+                      Verifying session...
+                    {:else}
+                      Verify and Activate Session
+                    {/if}
+                  </button>
+                </div>
+              {/if}
+            </div>
+          {/if}
+
+          <!-- Method 2: File Upload (.session/tdata) -->
+          {#if onboardMethod === "file"}
+            <div class="space-y-4 animate-fadeIn">
+              <div
+                on:dragover|preventDefault
+                on:drop={handleSessionDrop}
+                role="region"
+                aria-label="Session File Dropper"
+                class="border-2 border-dashed border-outline-variant rounded-2xl p-8 flex flex-col items-center justify-center bg-surface-container-low hover:bg-surface-container-low/80 hover:border-secondary transition-all cursor-pointer relative"
+              >
+                <input
+                  type="file"
+                  multiple
+                  accept=".session"
+                  on:change={handleSessionSelect}
+                  class="absolute inset-0 opacity-0 cursor-pointer"
+                  id="session-file-input"
+                />
+                <span class="material-symbols-outlined text-outline text-5xl mb-3">folder_zip</span>
+                <p class="font-body-lg text-body-lg text-on-surface-variant text-center font-semibold">
+                  Drag and drop .session / tdata files here
+                </p>
+                <p class="text-xs text-outline mt-1 text-center">
+                  Supports bulk onboarding of multi-format accounts.
+                </p>
+              </div>
+
+              {#if sessionFileError}
+                <div class="p-3 bg-error-container text-error rounded-lg text-xs flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">error</span>
+                  {sessionFileError}
+                </div>
+              {/if}
+
+              {#if uploadSuccessMessage}
+                <div class="p-3 bg-green-50 text-green-700 border border-green-200 rounded-lg text-xs flex items-center gap-2">
+                  <span class="material-symbols-outlined text-sm">check_circle</span>
+                  {uploadSuccessMessage}
+                </div>
+              {/if}
+            </div>
+          {/if}
+
+          <!-- General error messages -->
+          {#if onboardError}
+            <div class="p-3 bg-error-container text-error rounded-lg text-xs flex items-center gap-2 animate-fadeIn">
+              <span class="material-symbols-outlined text-sm">warning</span>
+              {onboardError}
+            </div>
+          {/if}
+
+          <!-- Onboarding Success Alert -->
+          {#if onboardSuccess}
+            <div class="p-4 bg-green-50 border border-green-200 text-green-800 rounded-xl flex gap-3 items-center animate-fadeIn" role="alert">
+              <span class="material-symbols-outlined text-green-600 text-2xl">verified</span>
+              <div>
+                <h4 class="font-bold text-sm">Account Successfully Bound!</h4>
+                <p class="text-xs">The Telegram session has been verified and isolated under proxy successfully.</p>
+              </div>
+            </div>
+          {/if}
+
+        </div>
+
+        <!-- Modal Footer -->
+        <footer class="px-6 py-4 border-t border-outline-variant bg-surface-container-low flex justify-end gap-3">
+          <button on:click={closeOnboardModal} class="px-4 py-2 border border-outline-variant text-on-surface-variant bg-white font-bold text-xs rounded-xl hover:bg-surface-container-high transition-colors">
+            Cancel
+          </button>
+        </footer>
+
+      </div>
+    </div>
+  {/if}
 
 </div>
 
