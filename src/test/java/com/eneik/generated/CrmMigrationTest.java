@@ -18,6 +18,12 @@ public class CrmMigrationTest {
 
     @Test
     public void testMigrationAndOptimizedSchema() {
+        // 0. Clean up tables to ensure independent test isolation
+        jdbcTemplate.execute("DELETE FROM chat_messages");
+        jdbcTemplate.execute("DELETE FROM chats");
+        jdbcTemplate.execute("DELETE FROM leads");
+        jdbcTemplate.execute("DELETE FROM telegram_accounts");
+
         // 1. Verify all necessary tables exist in the H2 database schema
         List<String> tables = jdbcTemplate.queryForList(
             "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'PUBLIC'",
@@ -25,7 +31,7 @@ public class CrmMigrationTest {
         );
 
         assertThat(tables)
-            .contains("TELEGRAM_ACCOUNTS", "LEADS", "CHATS", "MESSAGES");
+            .contains("TELEGRAM_ACCOUNTS", "LEADS", "CHATS", "CHAT_MESSAGES", "MESSAGES");
 
         // 2. Verify optimized index exists
         List<Map<String, Object>> indexes = jdbcTemplate.queryForList(
@@ -41,19 +47,19 @@ public class CrmMigrationTest {
 
         // 4. Test insert and selection flow to guarantee unified inbox query correctness
         jdbcTemplate.execute("INSERT INTO telegram_accounts (phone_number, session_status) VALUES ('+123456789', 'Active')");
-        Long accountId = jdbcTemplate.queryForObject("SELECT id FROM telegram_accounts WHERE phone_number = '+123456789'", Long.class);
+        Long accountId = jdbcTemplate.queryForObject("SELECT id FROM telegram_accounts WHERE phone_number = '+123456789' ORDER BY id DESC LIMIT 1", Long.class);
 
         jdbcTemplate.execute("INSERT INTO leads (username, phone_number, status) VALUES ('lead_user', '+987654321', 'New')");
-        Long leadId = jdbcTemplate.queryForObject("SELECT id FROM leads WHERE username = 'lead_user'", Long.class);
+        Long leadId = jdbcTemplate.queryForObject("SELECT id FROM leads WHERE username = 'lead_user' ORDER BY id DESC LIMIT 1", Long.class);
 
         jdbcTemplate.execute(String.format(
             "INSERT INTO chats (telegram_account_id, lead_id, status, last_message_at) VALUES (%d, %d, 'Unassigned', '2026-07-26 12:00:00')",
             accountId, leadId
         ));
-        Long chatId = jdbcTemplate.queryForObject("SELECT id FROM chats WHERE telegram_account_id = " + accountId, Long.class);
+        Long chatId = jdbcTemplate.queryForObject("SELECT id FROM chats WHERE telegram_account_id = " + accountId + " ORDER BY id DESC LIMIT 1", Long.class);
 
         jdbcTemplate.execute(String.format(
-            "INSERT INTO messages (chat_id, sender_type, text, sent_at) VALUES (%d, 'Lead', 'Hello, interest in product!', '2026-07-26 12:00:00')",
+            "INSERT INTO chat_messages (chat_id, sender_type, text, sent_at) VALUES (%d, 'Lead', 'Hello, interest in product!', '2026-07-26 12:00:00')",
             chatId
         ));
 
