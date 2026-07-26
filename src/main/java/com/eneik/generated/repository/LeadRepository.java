@@ -21,4 +21,8 @@ public interface LeadRepository extends JpaRepository<Lead, Long> {
             @Param("id") Long id,
             @Param("oldStatus") String oldStatus,
             @Param("newStatus") String newStatus);
+
+    long countByStatus(String status);
+
+    long countByStatusNot(String status);
 }
