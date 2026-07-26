@@ -168,10 +168,10 @@ public class CrmController {
         reply.setCreatedAt(LocalDateTime.now());
         messageRepository.save(reply);
 
-        // Update dialog status atomically/optimistically
-        dialog.setStatus("ACTIVE");
-        dialog.setUpdatedAt(LocalDateTime.now());
-        dialogRepository.save(dialog);
+        int updated = dialogRepository.updateStatusAtomically(id, dialog.getStatus(), "ACTIVE");
+        if (updated == 0) {
+            return ResponseEntity.status(409).body("Dialog status changed concurrently");
+        }
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", reply.getId());
