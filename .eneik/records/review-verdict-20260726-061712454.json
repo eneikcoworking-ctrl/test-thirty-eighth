@@ -1,0 +1,13 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "Modifying existing, already-applied Flyway migration files (V20260726003211326, V20260726003554409, V20260726003721423) is risky and can lead to migration checksum validation failures in environments where they were already deployed.",
+        "Committing Svelte build artifacts (such as JS and CSS assets) under 'src/main/resources/static/' is discouraged because they are compiled/generated frontend outputs."
+      ]
+    }
+  ]
+}

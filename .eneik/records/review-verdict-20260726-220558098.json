@@ -1,0 +1,51 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "block",
+      "criticalReason": "PR #0 commits new generated/review-verdict bookkeeping files inside the forbidden '.eneik/records/' directory, which violates boundary constraints and causes automated PR rejection.",
+      "concerns": [
+        "Disabling Flyway migration validation ('spring.flyway.validate-on-migrate=false') in application.properties hides potential schema validation mismatches.",
+        "Modifies existing Flyway migrations directly instead of creating a new migration file as specified by the MANDATORY Flyway version instructions.",
+        "Using a default Random instance per-request in SpintaxService rather than a thread-safe ThreadLocalRandom or shared SecureRandom might cause lock contention under high concurrency."
+      ]
+    },
+    {
+      "sourceIndex": 1,
+      "verdict": "block",
+      "criticalReason": "PR #1 commits compiled build artifacts (compiled '.class' files under the 'target/' directory) and an active runtime H2 database file ('data/appdb.mv.db') to the repository, violating strict repository hygiene guidelines.",
+      "concerns": [
+        "In TelegramAccountRepository, the updateStatusAtomic query uses @Modifying(clearAutomatically = true) but is missing flushAutomatically = true, which may lead to serving stale entity states within the same transaction context."
+      ]
+    },
+    {
+      "sourceIndex": 2,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "Directly modifies existing Flyway migration files to prefix tables with 'crm_' instead of implementing a new migration file with the MANDATORY version (V20260726003554324) if needed.",
+        "Deletes the 'target/.gitignore' file, which runs the risk of compiled class files or target directories being unstaged and committed to the repository in subsequent development.",
+        "Bundles unrelated DB migration schema changes (prefixing tables with 'crm_') and test updates inside an AI dialogue-focused service PR, which deviates from a clean separation of concerns."
+      ]
+    },
+    {
+      "sourceIndex": 3,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "The PR stages deletions under the forbidden '.eneik/' directory, which should be entirely excluded from commits on feature branches to prevent automated check failures.",
+        "In AIPromptEditor.svelte, the textareas for FAQs ('faqs-editor') and Qualification Rules ('qual-editor') lack Svelte data binding (bind:value) or state management, leaving them as purely static mock HTML textareas.",
+        "The top bar and bottom navigation 'Save', 'Editor', and 'Test Sandbox' buttons are mock-only and do not execute actual saving API calls or client-side routing, leaving the view non-functional."
+      ]
+    },
+    {
+      "sourceIndex": 4,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "Bundles database schema migrations (renaming tables to use 'crm_' prefix) and integration test updates directly into an API contract PR, which deviates from clean separation of concerns.",
+        "The OpenAPI contract defines target list paths but lacks specific schemas, schemas/definitions for error responses, or status-specific fields on some endpoints, which risks ambiguity during implementation."
+      ]
+    }
+  ]
+}
