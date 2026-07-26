@@ -1,0 +1,369 @@
+openapi: 3.0.3
+info:
+  title: Live CRM Unified Inbox API Contract
+  description: |
+    Shared API contract defining endpoints, request/response models, and error handling
+    for the Telegram Lead Generation & Outreach Automation platform's Unified Inbox.
+    This contract serves as the single source of truth for both Svelte/SvelteKit frontend
+    and Java Spring Boot backend developers.
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Base API URL path
+
+paths:
+  /dialogs:
+    get:
+      summary: Retrieve Dialog Feed (Unified Inbox)
+      description: |
+        Returns a paginated list of conversations (dialogs) filtered by status, ordered by
+        their last updated timestamp descending.
+      parameters:
+        - name: status
+          in: query
+          description: Filter dialogs by current status.
+          required: false
+          schema:
+            type: string
+            enum: [ACTIVE, PAUSED, COMPLETED, WAITING]
+        - name: page
+          in: query
+          description: Zero-based page index.
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: Number of records per page.
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+      responses:
+        '200':
+          description: A paginated array of dialogs.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [content, totalElements, totalPages, last, size, number]
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Dialog'
+                  totalElements:
+                    type: integer
+                    example: 42
+                  totalPages:
+                    type: integer
+                    example: 3
+                  last:
+                    type: boolean
+                    example: false
+                  size:
+                    type: integer
+                    example: 20
+                  number:
+                    type: integer
+                    example: 0
+
+  /dialogs/{dialogId}:
+    get:
+      summary: Get Single Dialog Details
+      description: Retrieves the metadata, status, and configuration details for a single dialog.
+      parameters:
+        - name: dialogId
+          in: path
+          description: Unique string identifier of the dialog.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Dialog details retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dialog'
+        '404':
+          description: Dialog not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dialogs/{dialogId}/messages:
+    get:
+      summary: Fetch Message Feed
+      description: |
+        Retrieves the message history for a specific dialog. Supports polling optimization via the
+        `since` timestamp parameter, returning only messages created after the specified time.
+      parameters:
+        - name: dialogId
+          in: path
+          description: Unique string identifier of the dialog.
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: since
+          in: query
+          description: ISO-8601 timestamp to retrieve only messages created after this time (for efficient polling).
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: Maximum number of messages to return.
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+      responses:
+        '200':
+          description: List of messages retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '404':
+          description: Dialog not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dialogs/{dialogId}/reply:
+    post:
+      summary: Send Manual Operator Reply
+      description: |
+        Dispatches a manual operator response to the lead via Telegram. This marks the dialog
+        as taking human intervention, normally pausing the AI Dialogue Engine.
+      parameters:
+        - name: dialogId
+          in: path
+          description: Unique string identifier of the dialog.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Reply payload containing text content.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content:
+                  type: string
+                  description: Text content of the operator's reply.
+                  example: "Hi! Thanks for the details. I will hand you over to our specialist right away."
+      responses:
+        '201':
+          description: Message sent and registered successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Dialog not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dialogs/{dialogId}/status:
+    post:
+      summary: Update Dialog Status (Atomically-Guarded Transition)
+      description: |
+        Transitions the dialog to a new status (such as PAUSED to halt AI processing, or ACTIVE
+        to resume). This update is atomically-guarded via optimistic locking (`version` field)
+        to prevent race conditions.
+      parameters:
+        - name: dialogId
+          in: path
+          description: Unique string identifier of the dialog.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: Status transition requirements.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status, expectedVersion]
+              properties:
+                status:
+                  type: string
+                  enum: [ACTIVE, PAUSED, COMPLETED, WAITING]
+                  description: The target status to transition to.
+                  example: "PAUSED"
+                expectedVersion:
+                  type: integer
+                  format: int64
+                  description: The version of the dialog resource currently known by the client (for optimistic locking checks).
+                  example: 2
+      responses:
+        '200':
+          description: Status transitioned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Dialog'
+        '400':
+          description: Invalid status value or parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Dialog not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: |
+            Conflict error. The dialog version has changed in the database since the client
+            retrieved it, indicating a concurrent update took place.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Dialog:
+      type: object
+      description: Represents an outreach dialogue conversation with a lead.
+      required: [id, telegramChatId, status, version, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the dialog.
+          example: "a80d59fa-9877-4df3-a6fe-4b13a7b3cd1a"
+        telegramChatId:
+          type: integer
+          format: int64
+          description: Corresponding Telegram conversation/chat ID.
+          example: 123456789
+        leadUsername:
+          type: string
+          nullable: true
+          description: Telegram handle of the lead (without the @ symbol).
+          example: "alice_crypto"
+        leadPhone:
+          type: string
+          nullable: true
+          description: Phone number of the lead if available.
+          example: "+1234567890"
+        aiState:
+          type: string
+          nullable: true
+          description: JSON string containing the state parameters for the AI Dialogue Engine.
+          example: '{"current_turn": 2, "last_evaluation": "interested"}'
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED, COMPLETED, WAITING]
+          description: Current operational state of the conversation.
+          example: "ACTIVE"
+        version:
+          type: integer
+          format: int64
+          description: Optimistic locking version. Incremented automatically upon updates.
+          example: 3
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the dialog was initiated.
+          example: "2026-07-26T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the dialog was last modified.
+          example: "2026-07-26T12:05:00Z"
+
+    Message:
+      type: object
+      description: Represents a single message within a dialog.
+      required: [id, dialogId, senderType, content, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the message.
+          example: "f2c92e9e-5e9a-4db3-97cc-8b431fc54a32"
+        dialogId:
+          type: string
+          format: uuid
+          description: Reference to the parent Dialog's UUID.
+          example: "a80d59fa-9877-4df3-a6fe-4b13a7b3cd1a"
+        senderType:
+          type: string
+          enum: [LEAD, AI, OPERATOR]
+          description: Type of sender who dispatched the message.
+          example: "LEAD"
+        content:
+          type: string
+          description: Rich text / body content of the message.
+          example: "I am interested in trying out the LeadGen bot!"
+        telegramMessageId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Unique Telegram message ID if synced with Telegram.
+          example: 456
+        version:
+          type: integer
+          format: int64
+          description: Message version tracking.
+          example: 0
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the message was received or sent.
+          example: "2026-07-26T12:04:15Z"
+
+    ErrorResponse:
+      type: object
+      description: Standardized API error shape returned in failure cases.
+      required: [timestamp, status, error, path]
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO-8601 timestamp of when the error occurred.
+          example: "2026-07-26T12:06:00Z"
+        status:
+          type: integer
+          description: HTTP status code representing the error type.
+          example: 409
+        error:
+          type: string
+          description: Error message details.
+          example: "Optimistic locking failure: expected version 2, but actual was 3."
+        path:
+          type: string
+          description: The endpoint request path that triggered the error.
+          example: "/api/dialogs/a80d59fa-9877-4df3-a6fe-4b13a7b3cd1a/status"

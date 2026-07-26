@@ -1,0 +1,28 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "02e7f577-2015-4623-9951-accf8b1de798",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Fix calculation of deliverable readiness to correctly include ongoing task completions so it doesn't stagnate at 5/19 when 29 tasks are done."
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch deliverable readiness metric calculation",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the readiness patch for this epic, I want to recalculate the metric dynamically using actual task completions, so that the stagnation warning is resolved.",
+          "acceptanceCriteria": "Given the deliverable readiness is being calculated\nWhen multiple new tasks have been completed\nThen the metric correctly reflects the new done tasks and is not stuck at previous values",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Readiness Calculation Logic",
+          "sixSigmaMetric": "Stagnation warning false positive rate reduced to 0",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}

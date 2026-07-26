@@ -1,0 +1,30 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "02e7f577-2015-4623-9951-accf8b1de798",
+      "sixSigmaMetric": "reduce false deliverable stagnation warnings from 100% over 4 cycles to 0%",
+      "tocConstraintRef": "deliverable readiness metric reporting",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Correct the deliverable readiness calculation to accurately reflect all completed tasks"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Fix deliverable readiness aggregation logic",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the calculation fix for this epic, I want to accurately map the total done tasks to the readiness score, so that the true view of progress is restored",
+          "acceptanceCriteria": "Given 33 tasks are completed\nWhen the deliverable readiness metric is computed\nThen the metric accurately incorporates all completed tasks\nGiven a new task is marked as done\nWhen the project state is evaluated\nThen the readiness score updates without artificial stagnation",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "backend task aggregation query",
+          "sixSigmaMetric": "reduce the deliverable readiness calculation discrepancy from >70% to 0%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
