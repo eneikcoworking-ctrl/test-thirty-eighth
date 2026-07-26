@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@Transactional
 public class CrmMigrationTest {
 
     @Autowired
@@ -29,13 +31,13 @@ public class CrmMigrationTest {
 
         // 2. Verify optimized index exists
         List<Map<String, Object>> indexes = jdbcTemplate.queryForList(
-            "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE TABLE_NAME = 'CRM_CHATS' AND INDEX_NAME = 'IDX_CHATS_ACCOUNT_STATUS_LAST_MSG'"
+            "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.INDEXES WHERE TABLE_NAME = 'CRM_CHATS' AND INDEX_NAME = 'IDX_CRM_CHATS_ACCOUNT_STATUS_LAST_MSG'"
         );
         assertThat(indexes).isNotEmpty();
 
         // 3. Verify view exists and can be queried
         List<Map<String, Object>> viewColumns = jdbcTemplate.queryForList(
-            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'UNIFIED_INBOX_VIEW'"
+            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'CRM_UNIFIED_INBOX_VIEW'"
         );
         assertThat(viewColumns).isNotEmpty();
 
@@ -58,7 +60,7 @@ public class CrmMigrationTest {
         ));
 
         // Query the unified inbox view to ensure data mapping operates flawlessly
-        List<Map<String, Object>> results = jdbcTemplate.queryForList("SELECT * FROM unified_inbox_view");
+        List<Map<String, Object>> results = jdbcTemplate.queryForList("SELECT * FROM crm_unified_inbox_view WHERE telegram_account_id = " + accountId);
         assertThat(results).hasSize(1);
         Map<String, Object> record = results.get(0);
         assertThat(record.get("CHAT_STATUS")).isEqualTo("Unassigned");

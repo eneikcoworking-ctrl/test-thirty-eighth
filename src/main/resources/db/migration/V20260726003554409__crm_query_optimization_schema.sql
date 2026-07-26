@@ -22,8 +22,8 @@ CREATE TABLE crm_chats (
     status VARCHAR(50) NOT NULL,
     last_message_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    CONSTRAINT fk_chats_account FOREIGN KEY (telegram_account_id) REFERENCES crm_telegram_accounts(id),
-    CONSTRAINT fk_chats_lead FOREIGN KEY (lead_id) REFERENCES crm_leads(id)
+    CONSTRAINT fk_crm_chats_account FOREIGN KEY (telegram_account_id) REFERENCES crm_telegram_accounts(id),
+    CONSTRAINT fk_crm_chats_lead FOREIGN KEY (lead_id) REFERENCES crm_leads(id)
 );
 
 CREATE TABLE crm_messages (
@@ -32,14 +32,14 @@ CREATE TABLE crm_messages (
     sender_type VARCHAR(50) NOT NULL,
     text TEXT NOT NULL,
     sent_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    CONSTRAINT fk_messages_chat FOREIGN KEY (chat_id) REFERENCES crm_chats(id)
+    CONSTRAINT fk_crm_messages_chat FOREIGN KEY (chat_id) REFERENCES crm_chats(id)
 );
 
 -- Index for fast unified inbox queries by status and account, ordered by last_message_at DESC
-CREATE INDEX idx_chats_account_status_last_msg ON crm_chats(telegram_account_id, status, last_message_at DESC);
+CREATE INDEX idx_crm_chats_account_status_last_msg ON crm_chats(telegram_account_id, status, last_message_at DESC);
 
 -- View for unified inbox presentation
-CREATE VIEW unified_inbox_view AS
+CREATE VIEW crm_unified_inbox_view AS
 SELECT
     c.id AS chat_id,
     c.status AS chat_status,

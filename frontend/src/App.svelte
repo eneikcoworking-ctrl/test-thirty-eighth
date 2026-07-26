@@ -1,6 +1,15 @@
 <script>
+  import AccountDashboard from "./lib/AccountDashboard.svelte";
+  import AccountOnboardForm from "./lib/AccountOnboardForm.svelte";
+  import AIPromptEditor from "./lib/AIPromptEditor.svelte";
+
   // Navigation State
-  let activeTab = "accounts"; // "accounts" or "campaigns"
+  let activeTab = "accounts"; // "accounts", "campaigns", or "aiPersona"
+  $: pageTitle = activeTab === "accounts"
+    ? "Accounts Center"
+    : activeTab === "campaigns"
+      ? "Campaign Setup"
+      : "AI Persona";
 
   // STATE FOR CAMPAIGN SETUP (Tab: "campaigns")
   let currentStep = 1; // 1: Basics, 2: Audience, 3: Content
@@ -204,6 +213,7 @@
 
   let searchQuery = "";
   let selectedFilter = "all"; // "all", "ACTIVE", "TEMPORARY_SPAM_BLOCK", "RE_AUTHORIZATION_REQUIRED", "PERMANENT_BAN"
+  let showAccountOnboard = false;
 
   $: filteredAccounts = accounts.filter(acc => {
     // Filter by status
@@ -384,6 +394,71 @@
   function closeOnboardModal() {
     showOnboardModal = false;
   }
+
+  function proxyToObject(proxy) {
+    if (!proxy || proxy === "None") return null;
+    if (typeof proxy !== "string") return proxy;
+
+    const [protocol = "SOCKS5", address = proxy] = proxy.split("://");
+    const [host = "", rawPort = ""] = address.split(":");
+    return {
+      protocol,
+      host,
+      port: Number(rawPort) || 1080,
+      username: "",
+      password: ""
+    };
+  }
+
+  function proxyToString(proxy) {
+    if (!proxy) return "None";
+    if (typeof proxy === "string") return proxy;
+    return `${proxy.protocol || "SOCKS5"}://${proxy.host || "127.0.0.1"}:${proxy.port || 1080}`;
+  }
+
+  function toAccountManagementShape(account) {
+    return {
+      ...account,
+      phone_number: account.phone_number || account.phoneNumber,
+      daily_limit: account.daily_limit || account.dailyLimit || 15,
+      proxy: proxyToObject(account.proxy),
+      onboarded_at: account.onboarded_at || account.joined || new Date().toISOString()
+    };
+  }
+
+  function fromAccountManagementShape(account) {
+    return {
+      id: account.id || accounts.length + 1,
+      phoneNumber: account.phoneNumber || account.phone_number,
+      username: (account.username || "new_tg_account").replace(/^@/, ""),
+      status: account.status || "ACTIVE",
+      proxy: proxyToString(account.proxy),
+      dailyLimit: account.dailyLimit || account.daily_limit || 15,
+      isWarmedUp: account.isWarmedUp ?? true,
+      currentTrustScore: account.currentTrustScore ?? 5.0,
+      company: account.company || "Onboarded Session",
+      joined: account.joined || account.onboarded_at || "Just Now"
+    };
+  }
+
+  $: accountManagementAccounts = accounts.map(toAccountManagementShape);
+
+  function openAccountOnboard() {
+    showAccountOnboard = true;
+  }
+
+  function closeAccountOnboard() {
+    showAccountOnboard = false;
+  }
+
+  function handleAccountOnboarded(event) {
+    accounts = [fromAccountManagementShape(event.detail), ...accounts];
+    showAccountOnboard = false;
+  }
+
+  function handleAccountUpdates(event) {
+    accounts = event.detail.map(fromAccountManagementShape);
+  }
 </script>
 
 <div class="min-h-screen flex flex-col md:flex-row font-body-md text-body-md bg-surface text-on-surface">
@@ -426,6 +501,15 @@
       </button>
 
       <button
+        on:click={() => activeTab = "aiPersona"}
+        class="w-[calc(100%-16px)] flex items-center gap-3 rounded-full mx-2 px-4 py-3 text-left transition-all duration-300
+          {activeTab === 'aiPersona' ? 'bg-primary text-on-primary font-bold' : 'text-on-surface-variant font-medium hover:bg-surface-container-high'}"
+      >
+        <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' {activeTab === 'aiPersona' ? 1 : 0};">psychology</span>
+        <span class="font-label-md text-label-md">AI Persona</span>
+      </button>
+
+      <button
         class="w-[calc(100%-16px)] flex items-center gap-3 rounded-full mx-2 px-4 py-3 text-left text-on-surface-variant font-medium hover:bg-surface-container-high transition-all duration-300"
       >
         <span class="material-symbols-outlined">monitor_heart</span>
@@ -459,7 +543,7 @@
         <span class="material-symbols-outlined text-primary">menu</span>
       </button>
       <h1 class="font-headline-sm text-headline-sm font-bold text-primary select-none">
-        {activeTab === "accounts" ? "Accounts Center" : "Campaign Setup"}
+        {pageTitle}
       </h1>
     </div>
     <div class="flex items-center gap-2">
@@ -479,6 +563,22 @@
 
       <!-- ==================== VIEW 1: ACCOUNT MANAGEMENT DASHBOARD ==================== -->
       {#if activeTab === "accounts"}
+        {#if showAccountOnboard}
+          <section class="animate-fadeIn mt-4" aria-label="Telegram account onboarding">
+            <AccountOnboardForm
+              on:onboard={handleAccountOnboarded}
+              on:cancel={closeAccountOnboard}
+            />
+          </section>
+        {:else}
+          <AccountDashboard
+            accounts={accountManagementAccounts}
+            on:onboardRequest={openAccountOnboard}
+            on:updateAccounts={handleAccountUpdates}
+          />
+        {/if}
+
+        {#if false}
         <section class="animate-fadeIn mt-4" aria-labelledby="accounts-heading">
           <!-- Heading Section -->
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -633,6 +733,7 @@
             </button>
           </div>
         </section>
+        {/if}
       {/if}
 
       <!-- ==================== VIEW 2: CAMPAIGN SETUP WIZARD ==================== -->
@@ -982,6 +1083,19 @@
         </footer>
       {/if}
 
+      {#if activeTab === "aiPersona"}
+        <section class="animate-fadeIn mt-4" aria-labelledby="ai-persona-heading">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 id="ai-persona-heading" class="font-headline-lg text-headline-lg text-primary font-black">AI Persona</h2>
+              <p class="font-body-md text-body-md text-on-surface-variant">Tune system prompts, dynamic variables, and generation parameters for campaign conversations.</p>
+            </div>
+          </div>
+
+          <AIPromptEditor />
+        </section>
+      {/if}
+
     </div>
   </main>
 
@@ -1005,6 +1119,16 @@
     >
       <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' {activeTab === 'campaigns' ? 1 : 0};">dashboard</span>
       <span class="font-label-sm text-[10px] font-semibold mt-0.5">Campaigns</span>
+    </button>
+
+    <button
+      on:click={() => activeTab = "aiPersona"}
+      class="flex flex-col items-center justify-center rounded-full px-4 py-1.5 transition-transform duration-150
+        {activeTab === 'aiPersona' ? 'bg-primary/10 text-primary scale-105' : 'text-on-surface-variant'}"
+      aria-label="AI Persona View"
+    >
+      <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' {activeTab === 'aiPersona' ? 1 : 0};">psychology</span>
+      <span class="font-label-sm text-[10px] font-semibold mt-0.5">Persona</span>
     </button>
   </nav>
 
