@@ -1,10 +1,10 @@
 openapi: 3.0.3
 info:
-  title: LeadGen Bot - Campaign & Lead API Contract
+  title: LeadGen Bot - Full API Contract
   description: |
     API Contract for the AI-Powered Telegram Lead Generation & Outreach Automation Platform (LeadGen Bot).
-    This contract specifies endpoints for lead list ingestion (CSV/batch) and spintax campaign template management
-    enabling frontend and backend development to proceed in parallel.
+    This contract specifies endpoints for lead list ingestion (CSV/batch), spintax campaign template management,
+    and Telegram Account & Session Management (including OTP onboarding, pre-authenticated session upload, and proxy binding).
   version: 1.0.0
 servers:
   - url: http://localhost:8080/api
@@ -232,8 +232,552 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /proxies:
+    get:
+      summary: List all configured proxies
+      description: Retrieve a list of all IPv4/IPv6 proxies (SOCKS5/HTTP) configured in the system.
+      responses:
+        '200':
+          description: Successfully retrieved list of proxies
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyDTO'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      summary: Create a new proxy configuration
+      description: Register a dedicated proxy (SOCKS5/HTTP) to be later assigned to individual Telegram accounts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyCreateDTO'
+      responses:
+        '201':
+          description: Proxy successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyDTO'
+        '400':
+          description: Invalid proxy configuration or network format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /proxies/{id}:
+    get:
+      summary: Get details of a proxy
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Proxy details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProxyDTO'
+        '404':
+          description: Proxy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Delete a proxy configuration
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Proxy successfully deleted
+        '404':
+          description: Proxy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts:
+    get:
+      summary: List all Telegram accounts
+      description: Retrieves a list of all onboarded Telegram accounts and their status tracking.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter accounts by status
+          schema:
+            type: string
+            enum: [ACTIVE, TEMPORARY_SPAM_BLOCK, PERMANENT_BAN, RE_AUTHORIZATION_REQUIRED]
+      responses:
+        '200':
+          description: Successfully retrieved list of Telegram accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TGAccountDTO'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/{id}:
+    get:
+      summary: Get details of a specific Telegram account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Telegram account details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TGAccountDTO'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update a Telegram account's settings
+      description: Update settings like daily messaging limit to prevent flood-triggers.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TGAccountUpdateDTO'
+      responses:
+        '200':
+          description: Account configuration successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TGAccountDTO'
+        '400':
+          description: Invalid parameters supplied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    delete:
+      summary: Log out and delete Telegram account session
+      description: Cleanly terminates the local Telegram session and removes the account database record.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Telegram account successfully terminated and deleted
+        '404':
+          description: Account not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/{id}/proxy:
+    put:
+      summary: Assign or bind proxy to a Telegram account
+      description: Bind a dedicated proxy to this account to isolate networking and prevent IP-ban chaining.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyBindDTO'
+      responses:
+        '200':
+          description: Proxy successfully bound to Telegram account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TGAccountDTO'
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Telegram account or proxy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/onboard/initiate:
+    post:
+      summary: Initiate OTP session onboarding
+      description: Start session onboarding by sending an OTP verification code to the given Telegram phone number.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpInitiateRequest'
+      responses:
+        '200':
+          description: Verification code successfully sent/initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpInitiateResponse'
+        '400':
+          description: Invalid phone number format or onboarding already in progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error / TDLib communication failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/onboard/verify:
+    post:
+      summary: Verify OTP code and finalize onboarding
+      description: Verify the received OTP code and optional 2FA password to save the active Telegram session.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerifyRequest'
+      responses:
+        '200':
+          description: OTP code verified successfully and account session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TGAccountDTO'
+        '400':
+          description: Invalid OTP code or expired code hash
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 2FA password required or incorrect password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error / TDLib authentication failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /accounts/onboard/upload:
+    post:
+      summary: Upload pre-authenticated session files
+      description: Add an account by directly uploading pre-authenticated .session or tdata files (converted/zipped).
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - phoneNumber
+                - file
+                - format
+              properties:
+                phoneNumber:
+                  type: string
+                  description: Phone number associated with the pre-authenticated session.
+                  example: "+1234567890"
+                file:
+                  type: string
+                  format: binary
+                  description: The .session file or zipped tdata folder.
+                format:
+                  type: string
+                  description: Format of the uploaded session data.
+                  enum: [SESSION, TDATA]
+                  example: "SESSION"
+                proxyId:
+                  type: integer
+                  format: int64
+                  description: Optional ID of the proxy to bind to the account.
+                  example: 1
+      responses:
+        '201':
+          description: Pre-authenticated session successfully parsed and account registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TGAccountDTO'
+        '400':
+          description: Invalid session file structure or mismatch in phone number
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
+    ProxyDTO:
+      type: object
+      required:
+        - id
+        - host
+        - port
+        - protocol
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        host:
+          type: string
+          example: "192.168.1.50"
+        port:
+          type: integer
+          format: int32
+          example: 1080
+        username:
+          type: string
+          nullable: true
+          example: "proxy_user"
+        protocol:
+          type: string
+          enum: [SOCKS5, HTTP]
+          example: "SOCKS5"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-07-26T12:00:00Z"
+
+    ProxyCreateDTO:
+      type: object
+      required:
+        - host
+        - port
+        - protocol
+      properties:
+        host:
+          type: string
+          example: "192.168.1.50"
+        port:
+          type: integer
+          format: int32
+          example: 1080
+        username:
+          type: string
+          example: "proxy_user"
+        password:
+          type: string
+          example: "proxy_secret"
+        protocol:
+          type: string
+          enum: [SOCKS5, HTTP]
+          example: "SOCKS5"
+
+    ProxyBindDTO:
+      type: object
+      required:
+        - proxyId
+      properties:
+        proxyId:
+          type: integer
+          format: int64
+          nullable: true
+          example: 1
+
+    TGAccountDTO:
+      type: object
+      required:
+        - id
+        - phoneNumber
+        - status
+        - dailyLimit
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        phoneNumber:
+          type: string
+          example: "+1234567890"
+        username:
+          type: string
+          nullable: true
+          example: "tg_marketer"
+        status:
+          type: string
+          enum: [ACTIVE, TEMPORARY_SPAM_BLOCK, PERMANENT_BAN, RE_AUTHORIZATION_REQUIRED]
+          example: "ACTIVE"
+        proxy:
+          $ref: '#/components/schemas/ProxyDTO'
+          nullable: true
+        dailyLimit:
+          type: integer
+          format: int32
+          example: 15
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-07-26T12:00:00Z"
+
+    TGAccountUpdateDTO:
+      type: object
+      required:
+        - dailyLimit
+      properties:
+        dailyLimit:
+          type: integer
+          format: int32
+          example: 18
+
+    OtpInitiateRequest:
+      type: object
+      required:
+        - phoneNumber
+      properties:
+        phoneNumber:
+          type: string
+          example: "+1234567890"
+
+    OtpInitiateResponse:
+      type: object
+      required:
+        - phoneNumber
+        - phoneCodeHash
+        - status
+      properties:
+        phoneNumber:
+          type: string
+          example: "+1234567890"
+        phoneCodeHash:
+          type: string
+          description: Token representing the login session returned from Telegram API.
+          example: "abc123xyz"
+        status:
+          type: string
+          description: Notification or action indicator.
+          example: "SENT"
+
+    OtpVerifyRequest:
+      type: object
+      required:
+        - phoneNumber
+        - phoneCodeHash
+        - code
+      properties:
+        phoneNumber:
+          type: string
+          example: "+1234567890"
+        phoneCodeHash:
+          type: string
+          example: "abc123xyz"
+        code:
+          type: string
+          description: The 5-digit verification code received in Telegram.
+          example: "55432"
+        twoFactorPassword:
+          type: string
+          description: If the Telegram account has 2FA enabled, the password must be supplied.
+          example: "my_secure_2fa_pass"
+        proxyId:
+          type: integer
+          format: int64
+          description: Optional ID of the proxy to bind to the account.
+          example: 1
+
     CampaignCreateUpdateDTO:
       type: object
       required:
