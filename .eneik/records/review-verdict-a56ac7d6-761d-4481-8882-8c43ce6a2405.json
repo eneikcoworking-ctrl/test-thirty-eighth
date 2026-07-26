@@ -1,0 +1,18 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "block",
+      "criticalReason": "PR #0 commits build and generated artifacts under the target/ directory (e.g. .class files, Maven logs, surefire reports) as well as the database binary file (data/appdb.mv.db). It also used the incorrect Flyway version (V20260726003721423 instead of the mandated V20260726003721485).",
+      "concerns": []
+    },
+    {
+      "sourceIndex": 1,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "The PR modifies an existing database migration file (V20260726003554409__crm_query_optimization_schema.sql) instead of creating a new one, which can cause validation/checksum errors on environments where the migration has already run."
+      ]
+    }
+  ]
+}
