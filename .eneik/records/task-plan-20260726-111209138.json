@@ -1,0 +1,30 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "02e7f577-2015-4623-9951-accf8b1de798",
+      "sixSigmaMetric": "Decrease false stagnation warnings in project tracking from 1 to 0 per week",
+      "tocConstraintRef": "Stakeholder reporting bottleneck",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Patch the existing calculation logic so deliverable readiness accurately reflects ongoing task completion instead of stalling at 5/19."
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch project deliverable readiness calculation",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the metric fix for this epic, I want to patch the calculation logic, so that project deliverable readiness updates accurately.",
+          "acceptanceCriteria": "Given the deliverable readiness calculation is invoked\nWhen tasks are completed\nThen the metric updates to reflect the true progress beyond 5/19.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Progress calculation logic",
+          "sixSigmaMetric": "Reduce calculation error rate for deliverable readiness from 100% to 0%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
