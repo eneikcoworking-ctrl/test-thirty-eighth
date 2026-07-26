@@ -1,0 +1,28 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "02e7f577-2015-4623-9951-accf8b1de798",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Update the deliverable readiness calculation to accurately track task completion progress and eliminate false stagnation warnings."
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Fix readiness metric calculation logic",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the deliverable readiness fix for this epic, I want to correct the progress calculation algorithm, so that task completions are accurately reflected and false stagnation warnings are prevented.",
+          "acceptanceCriteria": "Given ongoing task completions in the project\nWhen the readiness tracking service calculates progress\nThen the deliverable readiness correctly advances past 5/19 based on the completed tasks\nGiven correct progress updates are recorded\nWhen the stagnation warning criteria is evaluated\nThen no false stagnation warnings are emitted for actively progressing projects",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "Readiness metric aggregation logic",
+          "sixSigmaMetric": "Decrease deliverable readiness calculation error rate to 0%",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
