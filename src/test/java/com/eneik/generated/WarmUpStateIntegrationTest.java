@@ -108,6 +108,15 @@ public class WarmUpStateIntegrationTest {
         assertTrue(allWarmedUpAboveFifty.stream().anyMatch(a -> a.getUsername().equals("acc_d")));
     }
 
+    @Autowired
+    private TelegramAccountWarmUpWorker warmUpWorker;
+
+    @Autowired
+    private DelayEngine delayEngine;
+
+    @org.springframework.boot.test.mock.mockito.MockBean
+    private Sleeper sleeper;
+
     @Test
     public void testAtomicallyGuardedStatusTransition() {
         TelegramAccount account = new TelegramAccount("+5555", "acc_e", "ACTIVE", null, 75.0, true);
@@ -129,5 +138,56 @@ public class WarmUpStateIntegrationTest {
         // Verify status remains TEMPORARY_SPAM_BLOCK
         TelegramAccount unchanged = accountRepository.findById(id).orElseThrow();
         assertEquals("TEMPORARY_SPAM_BLOCK", unchanged.getStatus());
+    }
+
+    @Test
+    public void testWarmUpWorkerSuccessAndLogs() {
+        // Seed the DelayEngine for reproducible, predictable random behavior
+        // Seed value chosen so that random.nextBoolean() is consistently reproducible.
+        // We'll also mock or seed Random directly.
+        delayEngine.setSeed(42);
+
+        // Create an idle account
+        TelegramAccount idleAccount = new TelegramAccount("+777777777", "idle_user", "IDLE", null, 70.0, false);
+        TelegramAccount savedAccount = accountRepository.save(idleAccount);
+
+        // Trigger warm-up
+        boolean success = warmUpWorker.warmUpAccount(savedAccount.getId());
+        assertTrue(success);
+
+        // Retrieve updated account
+        TelegramAccount updatedAccount = accountRepository.findById(savedAccount.getId()).orElseThrow();
+        assertEquals("IDLE", updatedAccount.getStatus());
+        assertEquals(71.5, updatedAccount.getCurrentTrustScore());
+        assertFalse(updatedAccount.getWarmedUp()); // 71.5 is still less than 80.0
+
+        // Check warm-up log entries
+        List<TelegramAccountWarmUpLog> logs = warmUpLogRepository.findByAccountId(savedAccount.getId());
+        assertEquals(1, logs.size());
+        TelegramAccountWarmUpLog firstLog = logs.get(0);
+        assertEquals("SUCCESS", firstLog.getStatus());
+        assertTrue(firstLog.getAction().equals("CHANNEL_READ") || firstLog.getAction().equals("ONLINE_STATUS_UPDATE"));
+        assertNotNull(firstLog.getDetails());
+
+        // Check trust score history records
+        List<TelegramAccountTrustScore> scores = trustScoreRepository.findByAccountId(savedAccount.getId());
+        assertEquals(1, scores.size());
+        assertEquals(71.5, scores.get(0).getScore());
+    }
+
+    @Test
+    public void testWarmUpWorkerBecomesWarmedUp() {
+        // Create an idle account with score close to threshold
+        TelegramAccount idleAccount = new TelegramAccount("+888888888", "ready_soon", "IDLE", null, 79.0, false);
+        TelegramAccount savedAccount = accountRepository.save(idleAccount);
+
+        // Trigger warm-up
+        boolean success = warmUpWorker.warmUpAccount(savedAccount.getId());
+        assertTrue(success);
+
+        // Retrieve updated account
+        TelegramAccount updatedAccount = accountRepository.findById(savedAccount.getId()).orElseThrow();
+        assertEquals(80.5, updatedAccount.getCurrentTrustScore());
+        assertTrue(updatedAccount.getWarmedUp()); // 80.5 is >= 80.0, should trigger warmed-up status
     }
 }
