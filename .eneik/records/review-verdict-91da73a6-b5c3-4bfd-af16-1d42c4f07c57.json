@@ -1,0 +1,30 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "The PR bundles unrelated backend changes (specifically, the CRM query optimization migration and Java tests) under the frontend tag PR.",
+        "The save handler gracefully/silently succeeds even when the backend API fails, which could hide real persistence errors from the user."
+      ]
+    },
+    {
+      "sourceIndex": 1,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "The controller returns JPA entity domain models directly (e.g. Dialog, Message) instead of standard DTOs (e.g. DialogDTO, MessageDTO).",
+        "Standard error handlers / ExceptionHandlers are defined locally inside the DialogController instead of a global @ControllerAdvice class."
+      ]
+    },
+    {
+      "sourceIndex": 2,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "Using standard multipart/form-data with binary formats is correct, but could benefit from explicitly documenting specific expected ZIP structures for tdata uploads."
+      ]
+    }
+  ]
+}

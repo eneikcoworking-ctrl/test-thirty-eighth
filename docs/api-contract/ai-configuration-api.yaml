@@ -1,0 +1,253 @@
+openapi: 3.0.3
+info:
+  title: LeadGen Bot - AI Configuration API Contract
+  description: |
+    API Contract for AI dialogue engine configuration, specifically system prompt tuning and stop rules.
+    This contract specifies endpoints for updating and retrieving system prompts, parameters (temperature, max tokens, Top P),
+    and stop rules (e.g., maximum turns, trigger words, dynamic state transitions).
+  version: 1.0.0
+servers:
+  - url: /api
+    description: Local Gateway API
+
+paths:
+  /campaigns/{campaignId}/prompt:
+    get:
+      summary: Retrieve the current AI prompt configuration and stop rules for a campaign
+      operationId: getCampaignAiConfig
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          description: Unique identifier of the campaign
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: AI Configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfigResponse'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '500':
+          $ref: '#/components/responses/500InternalError'
+    put:
+      summary: Update the AI prompt configuration and stop rules for a campaign
+      operationId: updateCampaignAiConfig
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          description: Unique identifier of the campaign
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiConfigRequest'
+      responses:
+        '200':
+          description: AI Configuration updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AiConfigResponse'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '404':
+          $ref: '#/components/responses/404NotFound'
+        '409':
+          $ref: '#/components/responses/409Conflict'
+        '500':
+          $ref: '#/components/responses/500InternalError'
+
+components:
+  schemas:
+    AiConfigRequest:
+      type: object
+      required:
+        - systemPrompt
+        - modelParameters
+        - stopRules
+      properties:
+        systemPrompt:
+          type: string
+          description: The actual system instructions defining the AI's persona, context variables, and guidelines. Supports variable interpolation using double curly braces (e.g. {{user_name}}).
+          example: |
+            You are a highly capable outreach assistant named {{assistant_role}}.
+            Your goal is to converse warmly with {{user_name}} and offer assistance regarding {{topic_focus}}.
+        modelParameters:
+          $ref: '#/components/schemas/ModelParameters'
+        stopRules:
+          type: array
+          description: Conditions under which the automated AI conversation dialogue halts or hands off to a human sales representative.
+          items:
+            $ref: '#/components/schemas/StopRule'
+        version:
+          type: integer
+          format: int64
+          description: Version field for optimistic locking to prevent concurrent overwrite collisions.
+          example: 0
+
+    AiConfigResponse:
+      type: object
+      required:
+        - campaignId
+        - systemPrompt
+        - modelParameters
+        - stopRules
+        - version
+        - updatedAt
+      properties:
+        campaignId:
+          type: integer
+          format: int64
+          description: ID of the campaign these settings are linked to.
+          example: 42
+        systemPrompt:
+          type: string
+          description: The system instructions.
+          example: |
+            You are a highly capable outreach assistant named {{assistant_role}}.
+            Your goal is to converse warmly with {{user_name}} and offer assistance regarding {{topic_focus}}.
+        modelParameters:
+          $ref: '#/components/schemas/ModelParameters'
+        stopRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/StopRule'
+        version:
+          type: integer
+          format: int64
+          description: The entity version used for optimistic concurrency control.
+          example: 1
+        updatedAt:
+          type: string
+          format: date-time
+          description: The date-time when this configuration was last modified.
+          example: "2026-07-26T12:00:00Z"
+
+    ModelParameters:
+      type: object
+      required:
+        - temperature
+        - maxTokens
+        - topP
+      properties:
+        temperature:
+          type: number
+          format: float
+          description: Sampling temperature between 0.0 and 2.0. Lower values are more deterministic; higher values are more creative.
+          minimum: 0.0
+          maximum: 2.0
+          example: 0.7
+        maxTokens:
+          type: integer
+          description: Maximum number of tokens the model is permitted to generate.
+          minimum: 1
+          maximum: 8192
+          example: 2048
+        topP:
+          type: number
+          format: float
+          description: Nucleus sampling option (alternative to temperature).
+          minimum: 0.0
+          maximum: 1.0
+          example: 1.0
+
+    StopRule:
+      type: object
+      required:
+        - ruleType
+        - value
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the stop rule (if persisted).
+          example: "d3b07384-d113-4a12-b5bc-ec1177603b8c"
+        ruleType:
+          type: string
+          enum:
+            - MAX_TURNS
+            - KEYWORD_TRIGGER
+            - SENTIMENT_THRESHOLD
+            - CUSTOM_AI_RULE
+          description: The criteria type used to trigger dialog termination/handoff.
+          example: MAX_TURNS
+        value:
+          type: string
+          description: The parameter value for this stop rule. E.g. "5" for max turns, "stop,unsubscribe" for keywords.
+          example: "5"
+        description:
+          type: string
+          description: Friendly explanation of what this stop rule achieves.
+          example: "Stop the AI dialogue and hand off to human if the total turns exceed 5."
+
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-07-26T12:05:00Z"
+        status:
+          type: integer
+          example: 400
+        error:
+          type: string
+          example: "Bad Request"
+        message:
+          type: string
+          example: "Invalid system prompt syntax: missing closing brackets."
+        path:
+          type: string
+          example: "/api/campaigns/42/prompt"
+
+  responses:
+    400BadRequest:
+      description: Invalid request payload or validation constraints violated (e.g., temperature out of bounds).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    401Unauthorized:
+      description: Authentication is required or credentials are invalid.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    404NotFound:
+      description: The campaign or configuration was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    409Conflict:
+      description: Optimistic lock violation. The configuration was updated by another request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    500InternalError:
+      description: An unexpected internal server error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

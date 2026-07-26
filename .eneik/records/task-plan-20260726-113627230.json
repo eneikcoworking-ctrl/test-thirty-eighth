@@ -1,0 +1,30 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "02e7f577-2015-4623-9951-accf8b1de798",
+      "sixSigmaMetric": "Reduce false project stagnation warning rate from 100% of checks to 0%",
+      "tocConstraintRef": "Stakeholder visibility into project progress",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Patch existing deliverable readiness tracking logic to accurately update as tasks are resolved, unblocking the 5/19 stagnation"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Fix deliverable readiness tracking calculation",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the metric fix for this epic, I want the backend calculation to accurately count resolved tasks, so that false stagnation warnings are eliminated",
+          "acceptanceCriteria": "Given task resolution occurs, When the deliverable readiness tracking evaluates the state, Then the readiness ratio correctly increments beyond 5/19.\nGiven the project observer evaluates project state, When the readiness ratio is fetched, Then no false stagnation warning is emitted if progress has been made.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Deliverable readiness tracking logic accuracy",
+          "sixSigmaMetric": "Reduce metric calculation error rate from 100% to 0% for updated task tracking",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
