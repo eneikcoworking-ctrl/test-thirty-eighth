@@ -1,0 +1,30 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "02e7f577-2015-4623-9951-accf8b1de798",
+      "sixSigmaMetric": "reduce deliverable readiness stagnation duration from >3 cycles to 0",
+      "tocConstraintRef": "deliverable readiness metric calculation bottleneck",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Fix calculation of deliverable readiness to correctly include ongoing task completions so it doesn't stagnate at 5/19 when more tasks are done."
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch deliverable readiness metric calculation",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the calculation fix for this epic, I want to patch the existing code directly, so that the deliverable readiness accurately moves past the 5/19 stagnation point.",
+          "acceptanceCriteria": "Given the deliverable readiness is being calculated\nWhen multiple new tasks have been completed\nThen the metric correctly reflects the new done tasks and is not stuck at previous values",
+          "leanValue": "essential",
+          "cynefinDomain": "complicated",
+          "tocConstraintRef": "deliverable readiness calculation logic",
+          "sixSigmaMetric": "eliminate the 26 percent deliverable readiness calculation error rate",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}

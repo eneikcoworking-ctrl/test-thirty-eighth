@@ -1,0 +1,15 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "block",
+      "criticalReason": "The PR violates non-negotiable boundaries by committing multiple files inside the forbidden '.eneik/' directory (such as '.eneik/records/review-verdict-20260726-014713889.json' and other bookkeeping files) and committing a forbidden '.png' file ('frontend/src/assets/hero.png').",
+      "concerns": [
+        "In TGAccountRepository and LeadRepository, the atomic status update queries use @Modifying(clearAutomatically = true) but are missing flushAutomatically = true, which can lead to Hibernate first-level cache serving stale entity states.",
+        "The PR modifies existing Flyway migration files directly rather than creating a new migration using the designated timestamp V20260726003403610, which can lead to migration checksum validation failures.",
+        "The application.properties disables Flyway validation ('spring.flyway.validate-on-migrate=false') which can mask schema mismatches.",
+        "SpintaxService instantiates a default Random instance per-request or uses a standard Random instance under concurrency which can lead to performance bottlenecks and poor distribution compared to ThreadLocalRandom or SecureRandom."
+      ]
+    }
+  ]
+}

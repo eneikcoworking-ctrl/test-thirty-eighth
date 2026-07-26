@@ -1,0 +1,30 @@
+{
+  "epics": [
+    {
+      "existingEpicId": "02e7f577-2015-4623-9951-accf8b1de798",
+      "sixSigmaMetric": "Reduce false project stagnation warnings to 0",
+      "tocConstraintRef": "Stakeholder reporting reliability",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Fix deliverable readiness calculation logic to correctly incorporate all tasks (resolving the stale 5/19 ratio when 30 tasks are done)"
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch deliverable readiness metric calculation",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the calculation fix for this epic, I want to correct the denominator boundary logic, so that the true task progress is reflected without stagnation warnings.",
+          "acceptanceCriteria": "Given an active project pipeline with more than 19 tasks,\nWhen the readiness metric is calculated,\nThen the denominator correctly includes all relevant tasks rather than capping at 19.\nGiven task completions advance to 30,\nWhen the metric is retrieved,\nThen the ratio updates proportionally and triggers no false stagnation warning.",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "Metric aggregation denominator limit",
+          "sixSigmaMetric": "Achieve 100% accuracy for readiness ratio denominator",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
