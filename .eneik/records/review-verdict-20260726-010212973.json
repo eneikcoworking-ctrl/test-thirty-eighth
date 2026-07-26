@@ -1,0 +1,55 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "The use of EAGER fetching on Proxy in TGAccount might cause performance issues if loading many accounts; consider using LAZY fetching.",
+        "The status field in TGAccount is a plain String; using an Enum would improve type safety and validation."
+      ]
+    },
+    {
+      "sourceIndex": 1,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "The ADR specifies Python Pyrogram over gRPC/REST. Clearly defining the API contract early will prevent potential integration friction."
+      ]
+    },
+    {
+      "sourceIndex": 2,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "The status fields in both Campaign and Lead are mapped as plain String; using a JPA AttributeConverter or Enum would be safer.",
+        "Instant.now() default values in entities might lead to slight mismatch between database-generated timestamps and entity-level timestamps if not handled carefully."
+      ]
+    },
+    {
+      "sourceIndex": 3,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "Using UUID strings as primary keys (VARCHAR(36)) can degrade query and insert performance at scale compared to UUID or BIGINT types.",
+        "Status and sender_type fields are represented as raw Strings, which could benefit from Enums for validation."
+      ]
+    },
+    {
+      "sourceIndex": 4,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "The undo migration file U20260726003554409__crm_query_optimization_schema.sql drops several tables. Since these tables are also defined or may be defined in other PRs (like messages, leads, telegram_accounts), running this undo script could accidentally delete tables and cause data loss."
+      ]
+    },
+    {
+      "sourceIndex": 5,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "The database schema has double precision for scores, but in Java, it is mapped to Double. Ensure no floating-point precision issues arise during comparisons."
+      ]
+    }
+  ]
+}
