@@ -4,9 +4,9 @@
 -- Since the Flyway Community edition does not automatically run undo scripts,
 -- this file is intended as a validated reference for operators.
 
-DROP VIEW IF EXISTS unified_inbox_view;
-DROP INDEX IF EXISTS idx_chats_account_status_last_msg;
-DROP TABLE IF EXISTS messages;
-DROP TABLE IF EXISTS chats;
-DROP TABLE IF EXISTS leads;
-DROP TABLE IF EXISTS telegram_accounts;
+DROP VIEW IF EXISTS crm_unified_inbox_view;
+DROP INDEX IF EXISTS idx_crm_chats_account_status_last_msg;
+DROP TABLE IF EXISTS crm_messages;
+DROP TABLE IF EXISTS crm_chats;
+DROP TABLE IF EXISTS crm_leads;
+DROP TABLE IF EXISTS crm_telegram_accounts;
