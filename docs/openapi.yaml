@@ -1,0 +1,337 @@
+openapi: 3.0.3
+info:
+  title: LeadGen Bot - Campaign & Lead API Contract
+  description: |
+    API Contract for the AI-Powered Telegram Lead Generation & Outreach Automation Platform (LeadGen Bot).
+    This contract specifies endpoints for lead list ingestion (CSV/batch) and spintax campaign template management
+    enabling frontend and backend development to proceed in parallel.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+    description: Local development server
+paths:
+  /target-lists/{targetListId}/leads/import/csv:
+    post:
+      summary: Import lead target lists via CSV file
+      description: Uploads a CSV file containing lead target list info (@username or phone numbers) into a TargetList.
+      parameters:
+        - name: targetListId
+          in: path
+          required: true
+          description: The ID of the Target List to which the leads should be imported.
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The CSV file to import. Should contain columns like username, phone_number, first_name, last_name, metadata.
+              required:
+                - file
+      responses:
+        '200':
+          description: Leads successfully queued or imported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  targetListId:
+                    type: integer
+                    format: int64
+                  importedCount:
+                    type: integer
+                  status:
+                    type: string
+                    example: "SUCCESS"
+                  message:
+                    type: string
+                    example: "Successfully imported 25 leads."
+        '400':
+          description: Invalid request payload or invalid CSV format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Target list not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /target-lists/{targetListId}/leads/import/batch:
+    post:
+      summary: Manual batch lead entry
+      description: Batch inserts lead target lists manually in JSON format.
+      parameters:
+        - name: targetListId
+          in: path
+          required: true
+          description: The ID of the Target List to which the leads should be imported.
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/LeadCreateDTO'
+      responses:
+        '200':
+          description: Leads successfully imported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  targetListId:
+                    type: integer
+                    format: int64
+                  importedCount:
+                    type: integer
+                  status:
+                    type: string
+                    example: "SUCCESS"
+                  message:
+                    type: string
+                    example: "Successfully imported 5 leads."
+        '400':
+          description: Invalid request payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Target list not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /campaigns:
+    post:
+      summary: Create a new outreach campaign with a spintax template
+      description: Creates a campaign, defines the spintax template, and associates it with a TargetList.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignCreateUpdateDTO'
+      responses:
+        '201':
+          description: Campaign successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignDTO'
+        '400':
+          description: Invalid campaign configurations or malformed spintax
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Target list associated with the campaign not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /campaigns/{id}:
+    get:
+      summary: Get details of a specific campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Campaign details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignDTO'
+        '404':
+          description: Campaign not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    put:
+      summary: Update campaign and spintax template details
+      description: Updates campaign details including name, spintaxTemplate, useLlmPersonalization, and status.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignCreateUpdateDTO'
+      responses:
+        '200':
+          description: Campaign successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignDTO'
+        '400':
+          description: Invalid request configuration or malformed spintax template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Campaign or Target List not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    CampaignCreateUpdateDTO:
+      type: object
+      required:
+        - name
+        - targetListId
+      properties:
+        name:
+          type: string
+          description: Name of the campaign
+          example: "Crypto Dev Outreach Q3"
+        spintaxTemplate:
+          type: string
+          description: Randomizable spintax template text for human-like outreach messages.
+          example: "{Hi|Hello|Hey} {there|friend|}, check this out!"
+        useLlmPersonalization:
+          type: boolean
+          description: If enabled, LLM will be used to rephrase the first-offer dynamically.
+          default: false
+        status:
+          type: string
+          description: Status of the campaign
+          enum: [DRAFT, ACTIVE, PAUSED, COMPLETED]
+          default: DRAFT
+        targetListId:
+          type: integer
+          format: int64
+          description: ID of the associated target list of leads
+
+    CampaignDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        spintaxTemplate:
+          type: string
+        useLlmPersonalization:
+          type: boolean
+        status:
+          type: string
+        targetListId:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+
+    LeadCreateDTO:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          description: Telegram @username of the lead
+          example: "alice_dev"
+        phoneNumber:
+          type: string
+          description: Phone number of the lead
+          example: "+1234567890"
+        firstName:
+          type: string
+          example: "Alice"
+        lastName:
+          type: string
+          example: "Smith"
+        metadata:
+          type: string
+          description: JSON string or text containing lead's context/bio for LLM personalization
+          example: "{\"bio\": \"Web3 Dev working on Solidity contracts\"}"
+
+    ErrorResponse:
+      type: object
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        error:
+          type: string
+          description: Error type description
+          example: "Bad Request"
+        message:
+          type: string
+          description: Detailed explanation of the error
+          example: "Spintax template contains unbalanced curly braces."
+        path:
+          type: string
+          description: Request path
+          example: "/api/campaigns"
