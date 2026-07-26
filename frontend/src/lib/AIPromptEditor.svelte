@@ -1,11 +1,11 @@
-<script lang="ts">
+<script>
   let temperature = 0.7;
   let maxTokens = 2048;
   let nucleusSampling = false;
   let promptText = `You are a helpful assistant specialized in technical documentation. \nAlways respond in a concise, professional tone. \n\nCONTEXT:\nUser Name: {{user_name}}\nInteraction History: {{history}}\n\nOBJECTIVE:\nSynthesize technical data provided into readable summaries.`;
-  let editorRef: HTMLTextAreaElement;
+  let editorRef;
 
-  function insertVar(variable: string) {
+  function insertVar(variable) {
     if (!editorRef) return;
     const start = editorRef.selectionStart;
     const end = editorRef.selectionEnd;
@@ -90,13 +90,13 @@
   }
 
   .wrapper {
-      min-height: max(884px, 100dvh);
+      min-height: 0;
   }
 </style>
 
-<div class="wrapper flex flex-col min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+<div class="wrapper flex flex-col bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
   <!-- TopAppBar -->
-  <header class="bg-white dark:bg-gray-900 w-full border-b border-gray-200 dark:border-gray-800 fixed top-0 z-50">
+  <header class="bg-white dark:bg-gray-900 w-full border-b border-gray-200 dark:border-gray-800">
     <div class="flex items-center justify-between px-4 py-2 w-full max-w-7xl mx-auto h-14">
       <button aria-label="Go back" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 active:opacity-80 transition-colors flex items-center justify-center min-w-[44px] min-h-[44px] focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 dark:focus:ring-offset-gray-900" on:click={triggerHaptic}>
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
@@ -109,7 +109,7 @@
   </header>
 
   <!-- Main Content Canvas -->
-  <main class="flex-grow pt-14 pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full mt-4">
+  <main class="flex-grow py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
     <!-- Hero Identity Area (Atmospheric) -->
     <div class="relative w-full h-24 rounded-xl overflow-hidden my-6 flex items-center justify-center border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
       <div class="relative z-10 text-center">
@@ -285,7 +285,7 @@
   </main>
 
   <!-- BottomNavBar -->
-  <nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-6 py-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 h-16">
+  <nav class="hidden">
     <button aria-label="Editor tab" class="flex flex-col items-center justify-center text-blue-600 dark:text-blue-400 font-bold scale-95 duration-100 min-w-[44px] min-h-[44px]" on:click={triggerHaptic}>
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
       <span class="text-[10px] uppercase tracking-wider mt-1">Editor</span>
