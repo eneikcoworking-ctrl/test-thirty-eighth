@@ -20,6 +20,9 @@ public interface TelegramAccountRepository extends JpaRepository<TelegramAccount
     List<TelegramAccount> findByIsWarmedUpAndCurrentTrustScoreGreaterThanEqual(
             Boolean isWarmedUp, Double minScore);
 
+    // Filter accounts by status
+    List<TelegramAccount> findByStatus(String status);
+
     // Atomically-guarded status transition to prevent race conditions during concurrent updates
     // clearAutomatically = true ensures Hibernate's persistence context (first-level cache) is synchronized after update
     @Modifying(clearAutomatically = true)
