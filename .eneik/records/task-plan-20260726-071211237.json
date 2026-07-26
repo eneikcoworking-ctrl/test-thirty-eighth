@@ -1,0 +1,34 @@
+{
+  "epics": [
+    {
+      "existingEpicId": null,
+      "title": "Project Progress and Deliverable Readiness Tracking",
+      "jtbd": "When project stakeholders review project status, I want the deliverable readiness metric to update accurately, so that I have a true view of progress and do not receive false stagnation warnings.",
+      "kanoClass": "Must-Be",
+      "cynefinDomain": "complicated",
+      "sixSigmaMetric": "reduce deliverable readiness stagnation duration from >3 cycles to 0",
+      "tocConstraintRef": "progress_metrics_update",
+      "sourceIndex": 0,
+      "requirements": [
+        "R1: Fix the deliverable readiness calculation logic so that the ratio updates properly instead of being stuck at 5/19."
+      ],
+      "coverageComplete": true,
+      "slices": [
+        {
+          "title": "Patch deliverable readiness calculation logic",
+          "roleTag": "BARCAN-TAG-02",
+          "jtbd": "When implementing the calculation fix for this epic, I want to patch the existing code directly, so that the deliverable readiness accurately moves past the 5/19 stagnation point.",
+          "acceptanceCriteria": "Given the deliverable readiness is currently recorded as stuck at 5/19 (~26%)\nWhen a subsequent progress evaluation cycle occurs\nThen the deliverable readiness calculation logic processes the current state correctly\nAnd the readiness ratio updates to a value reflecting actual progress rather than stalling",
+          "leanValue": "essential",
+          "cynefinDomain": "clear",
+          "tocConstraintRef": "readiness_calculation_algorithm",
+          "sixSigmaMetric": "eliminate the 26 percent deliverable readiness calculation error rate",
+          "hasUi": false,
+          "requirementRefs": [
+            "R1"
+          ]
+        }
+      ]
+    }
+  ]
+}
