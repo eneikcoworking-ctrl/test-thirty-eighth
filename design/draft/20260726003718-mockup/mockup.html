@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Active Threads - CRM Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-fixed": "#131b2e",
+                    "primary-container": "#131b2e",
+                    "tertiary-fixed-dim": "#c4c7c9",
+                    "outline-variant": "#c6c6cd",
+                    "on-primary": "#ffffff",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed-dim": "#b7c8e1",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#111c2d",
+                    "background": "#f9f9ff",
+                    "inverse-primary": "#bec6e0",
+                    "error": "#ba1a1a",
+                    "inverse-on-surface": "#ecf1ff",
+                    "on-tertiary-container": "#818486",
+                    "tertiary": "#000000",
+                    "on-secondary-fixed-variant": "#38485d",
+                    "on-primary-fixed-variant": "#3f465c",
+                    "primary-fixed": "#dae2fd",
+                    "on-surface-variant": "#45464d",
+                    "surface-container-low": "#f0f3ff",
+                    "surface-bright": "#f9f9ff",
+                    "inverse-surface": "#263143",
+                    "on-secondary-fixed": "#0b1c30",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary": "#505f76",
+                    "on-background": "#111c2d",
+                    "tertiary-fixed": "#e0e3e5",
+                    "secondary-container": "#d0e1fb",
+                    "surface-container-highest": "#d8e3fb",
+                    "surface-tint": "#565e74",
+                    "surface": "#f9f9ff",
+                    "outline": "#76777d",
+                    "surface-dim": "#cfdaf2",
+                    "primary": "#000000",
+                    "primary-fixed-dim": "#bec6e0",
+                    "secondary-fixed": "#d3e4fe",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-fixed": "#191c1e",
+                    "surface-variant": "#d8e3fb",
+                    "on-tertiary-fixed-variant": "#444749",
+                    "on-primary-container": "#7c839b",
+                    "surface-container": "#e7eeff",
+                    "surface-container-high": "#dee8ff",
+                    "on-error": "#ffffff",
+                    "on-error-container": "#93000a",
+                    "tertiary-container": "#191c1e",
+                    "on-secondary-container": "#54647a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "margin-edge": "16px",
+                    "unit": "4px",
+                    "stack-compact": "8px",
+                    "padding-card": "16px",
+                    "gutter-list": "12px"
+            },
+            "fontFamily": {
+                    "headline-md": ["Inter"],
+                    "timestamp-sm": ["Inter"],
+                    "label-md": ["Inter"],
+                    "display-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-md": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-md": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "timestamp-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+                    "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "display-sm": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "letterSpacing": "0", "fontWeight": "400"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid white; position: absolute; bottom: 0; right: 0; }
+        .status-online { background-color: #10B981; }
+        .status-away { background-color: #F59E0B; }
+        .active-indicator { width: 4px; position: absolute; left: 0; top: 0; bottom: 0; background-color: #131b2e; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d8e3fb; border-radius: 10px; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-40 bg-surface border-b border-outline-variant flex justify-between items-center px-margin-edge h-14">
+<div class="flex items-center gap-3">
+<button class="hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined text-primary">menu</span>
+</button>
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface">Active Threads</h1>
+</div>
+<button class="hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined text-primary">filter_list</span>
+</button>
+</header>
+<main class="flex-grow pb-24">
+<!-- Search Section -->
+<div class="px-margin-edge py-4">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg py-2.5 pl-10 pr-4 text-body-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="Search customers or companies..." type="text"/>
+</div>
+</div>
+<!-- Thread List -->
+<div class="flex flex-col space-y-0">
+<!-- Active/Unread Thread -->
+<div class="relative bg-secondary-container/30 hover:bg-surface-container-high transition-all cursor-pointer border-b border-outline-variant/30 flex items-start p-4 gap-3 active:scale-[0.99] duration-150">
+<div class="active-indicator"></div>
+<div class="relative flex-shrink-0">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="A professional headshot of a female executive in her 30s, wearing a charcoal grey blazer and smiling confidently. The lighting is soft and corporate, with a clean blurred office background. The overall aesthetic is professional, high-fidelity, and trustworthy, fitting a modern CRM interface." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3Hdt_sDPxJG9GsmEWZlCZrKgANW6bY4Wbev9hAfBlbEBIOtbniN3YbZIxpNrfsEOZ9savG5PAfvDzZ7n61WVSsSFz-V6-wLEvBwDXMq1mSrxmoKzDIbMw6e-WF2gtYmbwJxe4syUsh3vRAsvJkKYnhGMmzTDq29v_EczVZygtUhF7KT4rbcFcKmRbzKxtCJiN2Gzo7pPQ39cDfWs-U_i4XFLR_BobPBFjPzOI9NSg0aDW8lmZ3Sx4w4Dy8bvo29v55cnaorrnHBA"/>
+<div class="status-dot status-online"></div>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start mb-0.5">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">Sarah Jenkins (Acme Corp)</h3>
+<span class="font-timestamp-sm text-timestamp-sm text-on-surface-variant">2m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface font-semibold truncate mb-2">We need to finalize the quarterly review by EOD.</p>
+<div class="flex items-center gap-2">
+<span class="bg-primary text-on-primary text-[10px] px-2 py-0.5 rounded-full font-bold">High Priority</span>
+<span class="bg-surface-container-highest text-on-secondary-container text-[10px] px-2 py-0.5 rounded-full font-semibold">Sales</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-2">
+<div class="bg-primary text-on-primary rounded-full w-5 h-5 flex items-center justify-center text-[11px] font-bold">3</div>
+</div>
+</div>
+<!-- Thread Item 2 -->
+<div class="hover:bg-surface-container-high transition-all cursor-pointer border-b border-outline-variant/30 flex items-start p-4 gap-3 active:scale-[0.99] duration-150">
+<div class="relative flex-shrink-0">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="A portrait of a male professional in a light blue oxford shirt, looking friendly and approachable. The photo has a shallow depth of field with a minimalist white wall behind him. The visual style is clean, modern, and aligned with a corporate light-mode theme using high-end photography standards." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCyFeplkWGxiNv0CJaKxuQobGFH1npkWy3tybe92XSBFzZq_1cWNXpMEvQJ1iQykcFWYXfkiHzfNg4_xvsbcIyTl_XFCRidhVo5hDoIpoESsDT4VJM9lfg6U5lhPU1G3JWr9tYV4-AgLwDlJRmX4WH8q3jtoDa9s-KCcr2tI8714avAfCc7onD5X1WYdKpSUJWh3rX4C9w2Ec_dnRd0nJk6yPqYCsu4ZWJFVCMKkibcggb-IBfHF9HrVkOEqynRVq-lYpZeH91bwpg"/>
+<div class="status-dot status-away"></div>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start mb-0.5">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">Marcus Wong</h3>
+<span class="font-timestamp-sm text-timestamp-sm text-on-surface-variant">15m ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant truncate mb-2">The latest documentation for the API is ready for review.</p>
+<div class="flex items-center gap-2">
+<span class="bg-surface-container-highest text-on-secondary-container text-[10px] px-2 py-0.5 rounded-full font-semibold">Support</span>
+</div>
+</div>
+</div>
+<!-- Thread Item 3 -->
+<div class="hover:bg-surface-container-high transition-all cursor-pointer border-b border-outline-variant/30 flex items-start p-4 gap-3 active:scale-[0.99] duration-150">
+<div class="relative flex-shrink-0">
+<img class="w-12 h-12 rounded-full object-cover" data-alt="A studio portrait of a woman with glasses, smiling softly. She is wearing a professional cream-colored sweater. The background is a soft, solid neutral tone. The lighting is balanced and professional, creating a clean and corporate feel that matches a high-productivity CRM dashboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLf1yzRuUHJdGGwuoHTN65g6-f4qAKR4xT-BE2kPebYv9znGWgMnhLajNxMrJPUADt-wR4mC_gBJWY-yBhOMmwxX_rNPo6ESz1b0lIyatKxodgs7fAjhX9scb4f7pID2pezIp608KNYdE1qcktonkJjK14oyM3a9YsMJG2jcO6MCq78XB9h15lKJWNNe-vqqQcOd0qqyGTPLVfNkdiE0dwFbziTgGkgpYj4tNGeTQwAZui-5XNgzQbxVGZOQf4mGdCzKdqG2oU4JA"/>
+<div class="status-dot status-online"></div>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start mb-0.5">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">Elena Rodriguez</h3>
+<span class="font-timestamp-sm text-timestamp-sm text-on-surface-variant">1h ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant truncate mb-2">Thanks for the update. Let's touch base tomorrow morning.</p>
+<div class="flex items-center gap-2">
+<span class="bg-surface-container-highest text-on-secondary-container text-[10px] px-2 py-0.5 rounded-full font-semibold">Client Relations</span>
+</div>
+</div>
+</div>
+<!-- Thread Item 4 -->
+<div class="relative bg-secondary-container/10 hover:bg-surface-container-high transition-all cursor-pointer border-b border-outline-variant/30 flex items-start p-4 gap-3 active:scale-[0.99] duration-150">
+<div class="relative flex-shrink-0">
+<div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-on-primary font-bold">JD</div>
+<div class="status-dot status-online"></div>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start mb-0.5">
+<h3 class="font-label-md text-label-md font-bold text-on-surface truncate">James D. (Inbound)</h3>
+<span class="font-timestamp-sm text-timestamp-sm text-on-surface-variant">3h ago</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface font-semibold truncate mb-2">New inquiry regarding enterprise pricing tiers.</p>
+<div class="flex items-center gap-2">
+<span class="bg-error/10 text-error text-[10px] px-2 py-0.5 rounded-full font-bold">New Lead</span>
+</div>
+</div>
+<div class="flex flex-col items-end gap-2">
+<div class="bg-primary text-on-primary rounded-full w-5 h-5 flex items-center justify-center text-[11px] font-bold">1</div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB -->
+<button class="fixed bottom-20 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform duration-200 z-50">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-16 bg-surface border-t border-outline-variant pb-safe z-40">
+<div class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 transition-all cursor-pointer">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<span class="font-label-md text-label-md mt-0.5">Chats</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-high transition-all px-4 py-1 rounded-full cursor-pointer">
+<span class="material-symbols-outlined">contacts</span>
+<span class="font-label-md text-label-md mt-0.5">Contacts</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-high transition-all px-4 py-1 rounded-full cursor-pointer">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-label-md text-label-md mt-0.5">Tasks</span>
+</div>
+<div class="flex flex-col items-center justify-center text-secondary hover:bg-surface-container-high transition-all px-4 py-1 rounded-full cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-md text-label-md mt-0.5">Settings</span>
+</div>
+</nav>
+<script>
+        // Simple ripple-like effect on thread clicks
+        document.querySelectorAll('.cursor-pointer').forEach(item => {
+            item.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const ripple = document.createElement('span');
+                ripple.style.position = 'absolute';
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                ripple.style.width = '2px';
+                ripple.style.height = '2px';
+                ripple.style.background = 'rgba(0,0,0,0.05)';
+                ripple.style.borderRadius = '50%';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.animation = 'ripple 0.6s linear';
+                ripple.style.pointerEvents = 'none';
+                
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Search bar interaction
+        const searchInput = document.querySelector('input[type="text"]');
+        searchInput.addEventListener('focus', () => {
+            searchInput.parentElement.classList.add('scale-[1.01]');
+        });
+        searchInput.addEventListener('blur', () => {
+            searchInput.parentElement.classList.remove('scale-[1.01]');
+        });
+    </script>
+<style>
+        @keyframes ripple {
+            to {
+                transform: scale(300);
+                opacity: 0;
+            }
+        }
+    </style>
+</body></html>
