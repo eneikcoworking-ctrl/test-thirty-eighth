@@ -2,7 +2,6 @@ package com.eneik.generated.controller;
 
 import com.eneik.generated.model.Deliverable;
 import com.eneik.generated.repository.DeliverableRepository;
-import com.eneik.generated.service.DeliverableReadinessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,27 +15,10 @@ import java.util.*;
 public class DeliverableController {
 
     private final DeliverableRepository deliverableRepository;
-    private final DeliverableReadinessService deliverableReadinessService;
 
     @Autowired
-    public DeliverableController(DeliverableRepository deliverableRepository, DeliverableReadinessService deliverableReadinessService) {
+    public DeliverableController(DeliverableRepository deliverableRepository) {
         this.deliverableRepository = deliverableRepository;
-        this.deliverableReadinessService = deliverableReadinessService;
-    }
-
-    /**
-     * Get readiness status / health metrics. Maps to multiple common endpoints.
-     */
-    @GetMapping({
-        "/api/deliverables/readiness",
-        "/api/project/readiness",
-        "/api/readiness",
-        "/api/metrics/readiness",
-        "/api/project/state"
-    })
-    public ResponseEntity<Map<String, Object>> getReadinessStatus() {
-        Map<String, Object> response = deliverableReadinessService.getReadinessMetrics();
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/api/deliverables")

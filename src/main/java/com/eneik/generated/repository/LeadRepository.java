@@ -24,4 +24,8 @@ public interface LeadRepository extends JpaRepository<Lead, Long> {
 
     @Query("SELECT COUNT(l) FROM Lead l WHERE UPPER(l.status) <> 'PENDING'")
     long countCompletedLeads();
+
+    long countByStatus(String status);
+
+    long countByStatusNot(String status);
 }
