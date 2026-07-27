@@ -2,6 +2,7 @@ package com.eneik.generated.controller;
 
 import com.eneik.generated.model.Deliverable;
 import com.eneik.generated.repository.DeliverableRepository;
+import com.eneik.generated.service.DeliverableReadinessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +16,12 @@ import java.util.*;
 public class DeliverableController {
 
     private final DeliverableRepository deliverableRepository;
+    private final DeliverableReadinessService deliverableReadinessService;
 
     @Autowired
-    public DeliverableController(DeliverableRepository deliverableRepository) {
+    public DeliverableController(DeliverableRepository deliverableRepository, DeliverableReadinessService deliverableReadinessService) {
         this.deliverableRepository = deliverableRepository;
+        this.deliverableReadinessService = deliverableReadinessService;
     }
 
     /**
@@ -32,28 +35,7 @@ public class DeliverableController {
         "/api/project/state"
     })
     public ResponseEntity<Map<String, Object>> getReadinessStatus() {
-        long completed = deliverableRepository.countCompletedDeliverables();
-        long total = deliverableRepository.count();
-
-        double ratio = (total > 0) ? (double) completed / total : 0.0;
-        double percentage = ratio * 100.0;
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("completed", completed);
-        response.put("completedCount", completed);
-        response.put("completedTasks", completed);
-        response.put("total", total);
-        response.put("totalCount", total);
-        response.put("totalTasks", total);
-        response.put("numerator", completed);
-        response.put("denominator", total);
-        response.put("ratio", ratio);
-        response.put("percentage", percentage);
-        response.put("progress", percentage);
-        response.put("readiness", ratio);
-        response.put("merged", completed);
-        response.put("status", "success");
-
+        Map<String, Object> response = deliverableReadinessService.getReadinessMetrics();
         return ResponseEntity.ok(response);
     }
 

@@ -1,7 +1,11 @@
 package com.eneik.generated;
 
 import com.eneik.generated.model.Deliverable;
+import com.eneik.generated.model.Lead;
+import com.eneik.generated.model.TargetList;
 import com.eneik.generated.repository.DeliverableRepository;
+import com.eneik.generated.repository.LeadRepository;
+import com.eneik.generated.repository.TargetListRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,6 +33,72 @@ public class DeliverableReadinessTrackingTests {
 
     @Autowired
     private DeliverableRepository deliverableRepository;
+
+    @Autowired
+    private LeadRepository leadRepository;
+
+    @Autowired
+    private TargetListRepository targetListRepository;
+
+    @Test
+    public void testReadinessTransitionsToLeadsAndUpdatesDynamically() throws Exception {
+        // Initially, leads table is empty, so it falls back to 5/19 deliverables
+        mockMvc.perform(get("/api/project/readiness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed", is(5)))
+                .andExpect(jsonPath("$.total", is(19)));
+
+        // Create a TargetList and insert 33 completed/done leads and some pending leads
+        TargetList list = new TargetList("Outreach List", "Description");
+        targetListRepository.saveAndFlush(list);
+
+        // 33 completed leads (e.g. status "SENT" or "COMPLETED")
+        for (int i = 1; i <= 33; i++) {
+            Lead lead = new Lead(list, "user" + i, "+123" + i, "First", "Last", "{}");
+            lead.setStatus("SENT");
+            leadRepository.save(lead);
+        }
+
+        // 3 pending leads
+        for (int i = 34; i <= 36; i++) {
+            Lead lead = new Lead(list, "user" + i, "+123" + i, "First", "Last", "{}");
+            lead.setStatus("PENDING");
+            leadRepository.save(lead);
+        }
+        leadRepository.flush();
+
+        // Now leads is NOT empty, so readiness should track completed leads (33 completed, 36 total)
+        mockMvc.perform(get("/api/project/readiness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed", is(33)))
+                .andExpect(jsonPath("$.total", is(36)))
+                .andExpect(jsonPath("$.numerator", is(33)))
+                .andExpect(jsonPath("$.denominator", is(36)))
+                .andExpect(jsonPath("$.ratio", is(closeTo(33.0 / 36.0, 0.001))));
+
+        // Given a new task/lead is marked as done, the score updates dynamically
+        // Add a new lead with "PENDING"
+        Lead newLead = new Lead(list, "user37", "+12337", "First", "Last", "{}");
+        newLead.setStatus("PENDING");
+        leadRepository.saveAndFlush(newLead);
+
+        // Total increases to 37, completed still 33
+        mockMvc.perform(get("/api/project/readiness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed", is(33)))
+                .andExpect(jsonPath("$.total", is(37)));
+
+        // Now mark it as done (e.g., status is "SENT" which is not "PENDING")
+        newLead.setStatus("SENT");
+        leadRepository.saveAndFlush(newLead);
+
+        // Total is 37, completed is 34
+        mockMvc.perform(get("/api/project/readiness"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed", is(34)))
+                .andExpect(jsonPath("$.total", is(37)))
+                .andExpect(jsonPath("$.ratio", is(closeTo(34.0 / 37.0, 0.001))));
+    }
 
     @Test
     public void testInitialReadinessState() throws Exception {

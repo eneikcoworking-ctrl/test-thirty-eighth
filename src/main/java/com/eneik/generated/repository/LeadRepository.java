@@ -21,4 +21,7 @@ public interface LeadRepository extends JpaRepository<Lead, Long> {
             @Param("id") Long id,
             @Param("oldStatus") String oldStatus,
             @Param("newStatus") String newStatus);
+
+    @Query("SELECT COUNT(l) FROM Lead l WHERE UPPER(l.status) <> 'PENDING'")
+    long countCompletedLeads();
 }
