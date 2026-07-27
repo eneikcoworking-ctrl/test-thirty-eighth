@@ -29,12 +29,6 @@ public class TGAccount {
     @Column(name = "daily_limit", nullable = false)
     private Integer dailyLimit = 15;
 
-    @Column(name = "consecutive_actions", nullable = false)
-    private Integer consecutiveActions = 0;
-
-    @Column(name = "last_action_at")
-    private OffsetDateTime lastActionAt;
-
     @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
     private OffsetDateTime createdAt;
 
@@ -48,17 +42,6 @@ public class TGAccount {
         this.sessionData = sessionData;
         this.proxy = proxy;
         this.dailyLimit = dailyLimit;
-    }
-
-    public TGAccount(String phoneNumber, String username, String status, String sessionData, Proxy proxy, Integer dailyLimit, Integer consecutiveActions, OffsetDateTime lastActionAt) {
-        this.phoneNumber = phoneNumber;
-        this.username = username;
-        this.status = status;
-        this.sessionData = sessionData;
-        this.proxy = proxy;
-        this.dailyLimit = dailyLimit;
-        this.consecutiveActions = consecutiveActions;
-        this.lastActionAt = lastActionAt;
     }
 
     // Getters and Setters
@@ -116,22 +99,6 @@ public class TGAccount {
 
     public void setDailyLimit(Integer dailyLimit) {
         this.dailyLimit = dailyLimit;
-    }
-
-    public Integer getConsecutiveActions() {
-        return consecutiveActions;
-    }
-
-    public void setConsecutiveActions(Integer consecutiveActions) {
-        this.consecutiveActions = consecutiveActions;
-    }
-
-    public OffsetDateTime getLastActionAt() {
-        return lastActionAt;
-    }
-
-    public void setLastActionAt(OffsetDateTime lastActionAt) {
-        this.lastActionAt = lastActionAt;
     }
 
     public OffsetDateTime getCreatedAt() {

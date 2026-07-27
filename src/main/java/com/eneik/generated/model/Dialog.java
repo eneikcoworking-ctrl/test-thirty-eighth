@@ -26,9 +26,6 @@ public class Dialog {
     @Column(nullable = false, length = 50)
     private String status;
 
-    @Column(name = "telegram_account_id")
-    private Long telegramAccountId;
-
     @Version
     @Column(nullable = false)
     private Long version = 0L;
@@ -87,14 +84,6 @@ public class Dialog {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public Long getTelegramAccountId() {
-        return telegramAccountId;
-    }
-
-    public void setTelegramAccountId(Long telegramAccountId) {
-        this.telegramAccountId = telegramAccountId;
     }
 
     public Long getVersion() {
