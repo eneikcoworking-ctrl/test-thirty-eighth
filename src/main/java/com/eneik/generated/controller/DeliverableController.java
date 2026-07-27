@@ -22,13 +22,10 @@ public class DeliverableController {
     }
 
     /**
-     * Get readiness status / health metrics. Maps to multiple common endpoints.
+     * Get readiness status / health metrics. Maps to multiple non-conflicting common endpoints.
      */
     @GetMapping({
         "/api/deliverables/readiness",
-        "/api/project/readiness",
-        "/api/readiness",
-        "/api/metrics/readiness",
         "/api/project/state"
     })
     public ResponseEntity<Map<String, Object>> getReadinessStatus() {
