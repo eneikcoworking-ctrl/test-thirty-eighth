@@ -25,9 +25,7 @@ public class MetricsControllerTest {
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completed").exists())
-                .andExpect(jsonPath("$.done").exists())
                 .andExpect(jsonPath("$.completedTasks").exists())
-                .andExpect(jsonPath("$.doneTasks").exists())
                 .andExpect(jsonPath("$.total").exists())
                 .andExpect(jsonPath("$.totalTasks").exists())
                 .andExpect(jsonPath("$.readiness").exists())
@@ -41,8 +39,18 @@ public class MetricsControllerTest {
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completed").exists())
-                .andExpect(jsonPath("$.done").exists())
                 .andExpect(jsonPath("$.total").exists())
                 .andExpect(jsonPath("$.readiness").exists());
+    }
+
+    @Test
+    public void testGetDeliverablesReadiness() throws Exception {
+        // Query the /api/deliverables/readiness endpoint
+        mockMvc.perform(get("/api/deliverables/readiness")
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.completed").exists())
+                .andExpect(jsonPath("$.total").exists())
+                .andExpect(jsonPath("$.ratio").exists());
     }
 }

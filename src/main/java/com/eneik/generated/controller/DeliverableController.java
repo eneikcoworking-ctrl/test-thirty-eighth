@@ -2,6 +2,7 @@ package com.eneik.generated.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,12 +14,18 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api")
-public class MetricsController {
+public class DeliverableController {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @GetMapping({"/metrics/readiness", "/metrics"})
-    public Map<String, Object> getMetrics() {
+    @GetMapping({
+        "/metrics/readiness",
+        "/metrics",
+        "/readiness",
+        "/deliverables/readiness",
+        "/project/readiness"
+    })
+    public ResponseEntity<Map<String, Object>> getReadinessStatus() {
         int completed = 0;
         int total = 19; // Default fallback to avoid division by zero or empty values
 
@@ -117,20 +124,31 @@ public class MetricsController {
         }
 
         double ratio = (total > 0) ? (double) completed / total : 0.0;
+        double percentage = ratio * 100.0;
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("completed", completed);
-        response.put("done", completed);
+        response.put("completedCount", completed);
         response.put("completedTasks", completed);
+        response.put("done", completed);
         response.put("doneTasks", completed);
         response.put("resolvedTasks", completed);
-        response.put("total", total);
-        response.put("totalTasks", total);
-        response.put("readiness", ratio);
-        response.put("ratio", ratio);
-        response.put("value", ratio);
+        response.put("numerator", completed);
+        response.put("merged", completed);
 
-        return response;
+        response.put("total", total);
+        response.put("totalCount", total);
+        response.put("totalTasks", total);
+        response.put("denominator", total);
+
+        response.put("ratio", ratio);
+        response.put("percentage", percentage);
+        response.put("progress", percentage);
+        response.put("readiness", ratio);
+        response.put("value", ratio);
+        response.put("status", "success");
+
+        return ResponseEntity.ok(response);
     }
 
     private String calculateMd5(String input) {
