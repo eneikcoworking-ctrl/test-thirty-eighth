@@ -1,0 +1,22 @@
+{
+  "verdicts": [
+    {
+      "sourceIndex": 0,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "Returning a raw Map<String, Object> in the controller and service can bypass strong compile-time type checks; consider using a dedicated DTO.",
+        "The query `UPPER(l.status) <> 'PENDING'` is used in LeadRepository; hardcoding status names inside queries can make it harder to maintain if status values change."
+      ]
+    },
+    {
+      "sourceIndex": 1,
+      "verdict": "approve",
+      "criticalReason": "",
+      "concerns": [
+        "DeliverableController's updateDeliverable uses a read-then-save pattern to update status/lifecycle fields; consider using the atomically-guarded `updateStatusAtomically` method defined in DeliverableRepository.",
+        "UUID generation is hardcoded inside the REST controller; consider moving ID generation to a service layer or utilizing JPA entity lifecycle callbacks."
+      ]
+    }
+  ]
+}
