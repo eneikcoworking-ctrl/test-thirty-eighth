@@ -2,6 +2,7 @@ package com.eneik.generated.controller;
 
 import com.eneik.generated.model.Deliverable;
 import com.eneik.generated.repository.DeliverableRepository;
+import com.eneik.generated.service.EneikReadinessService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +16,14 @@ import java.util.*;
 public class DeliverableController {
 
     private final DeliverableRepository deliverableRepository;
+    private final EneikReadinessService eneikReadinessService;
 
     @Autowired
-    public DeliverableController(DeliverableRepository deliverableRepository) {
+    public DeliverableController(
+            DeliverableRepository deliverableRepository,
+            EneikReadinessService eneikReadinessService) {
         this.deliverableRepository = deliverableRepository;
+        this.eneikReadinessService = eneikReadinessService;
     }
 
     /**
@@ -32,6 +37,9 @@ public class DeliverableController {
         "/api/project/state"
     })
     public ResponseEntity<Map<String, Object>> getReadinessStatus() {
+        // Update deliverables state from Eneik records outside of any controller transaction
+        eneikReadinessService.updateDeliverablesFromRecords();
+
         long completed = deliverableRepository.countCompletedDeliverables();
         long total = deliverableRepository.count();
 
@@ -53,6 +61,11 @@ public class DeliverableController {
         response.put("readiness", ratio);
         response.put("merged", completed);
         response.put("status", "success");
+
+        // Stagnation criteria is evaluated (5/19 ~ 26.315% is baseline stagnant state)
+        boolean stagnationWarning = (percentage <= 26.31579);
+        response.put("stagnationWarning", stagnationWarning);
+        response.put("stagnated", stagnationWarning);
 
         return ResponseEntity.ok(response);
     }
