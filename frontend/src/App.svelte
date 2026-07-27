@@ -1,4 +1,6 @@
 <script>
+  import AccountDashboard from "./lib/AccountDashboard.svelte";
+  import AccountOnboardForm from "./lib/AccountOnboardForm.svelte";
   import AIPromptEditor from "./lib/AIPromptEditor.svelte";
 
   // Navigation State
@@ -211,6 +213,7 @@
 
   let searchQuery = "";
   let selectedFilter = "all"; // "all", "ACTIVE", "TEMPORARY_SPAM_BLOCK", "RE_AUTHORIZATION_REQUIRED", "PERMANENT_BAN"
+  let showAccountOnboard = false;
 
   $: filteredAccounts = accounts.filter(acc => {
     // Filter by status
@@ -391,6 +394,71 @@
   function closeOnboardModal() {
     showOnboardModal = false;
   }
+
+  function proxyToObject(proxy) {
+    if (!proxy || proxy === "None") return null;
+    if (typeof proxy !== "string") return proxy;
+
+    const [protocol = "SOCKS5", address = proxy] = proxy.split("://");
+    const [host = "", rawPort = ""] = address.split(":");
+    return {
+      protocol,
+      host,
+      port: Number(rawPort) || 1080,
+      username: "",
+      password: ""
+    };
+  }
+
+  function proxyToString(proxy) {
+    if (!proxy) return "None";
+    if (typeof proxy === "string") return proxy;
+    return `${proxy.protocol || "SOCKS5"}://${proxy.host || "127.0.0.1"}:${proxy.port || 1080}`;
+  }
+
+  function toAccountManagementShape(account) {
+    return {
+      ...account,
+      phone_number: account.phone_number || account.phoneNumber,
+      daily_limit: account.daily_limit || account.dailyLimit || 15,
+      proxy: proxyToObject(account.proxy),
+      onboarded_at: account.onboarded_at || account.joined || new Date().toISOString()
+    };
+  }
+
+  function fromAccountManagementShape(account) {
+    return {
+      id: account.id || accounts.length + 1,
+      phoneNumber: account.phoneNumber || account.phone_number,
+      username: (account.username || "new_tg_account").replace(/^@/, ""),
+      status: account.status || "ACTIVE",
+      proxy: proxyToString(account.proxy),
+      dailyLimit: account.dailyLimit || account.daily_limit || 15,
+      isWarmedUp: account.isWarmedUp ?? true,
+      currentTrustScore: account.currentTrustScore ?? 5.0,
+      company: account.company || "Onboarded Session",
+      joined: account.joined || account.onboarded_at || "Just Now"
+    };
+  }
+
+  $: accountManagementAccounts = accounts.map(toAccountManagementShape);
+
+  function openAccountOnboard() {
+    showAccountOnboard = true;
+  }
+
+  function closeAccountOnboard() {
+    showAccountOnboard = false;
+  }
+
+  function handleAccountOnboarded(event) {
+    accounts = [fromAccountManagementShape(event.detail), ...accounts];
+    showAccountOnboard = false;
+  }
+
+  function handleAccountUpdates(event) {
+    accounts = event.detail.map(fromAccountManagementShape);
+  }
 </script>
 
 <div class="min-h-screen flex flex-col md:flex-row font-body-md text-body-md bg-surface text-on-surface">
@@ -495,6 +563,22 @@
 
       <!-- ==================== VIEW 1: ACCOUNT MANAGEMENT DASHBOARD ==================== -->
       {#if activeTab === "accounts"}
+        {#if showAccountOnboard}
+          <section class="animate-fadeIn mt-4" aria-label="Telegram account onboarding">
+            <AccountOnboardForm
+              on:onboard={handleAccountOnboarded}
+              on:cancel={closeAccountOnboard}
+            />
+          </section>
+        {:else}
+          <AccountDashboard
+            accounts={accountManagementAccounts}
+            on:onboardRequest={openAccountOnboard}
+            on:updateAccounts={handleAccountUpdates}
+          />
+        {/if}
+
+        {#if false}
         <section class="animate-fadeIn mt-4" aria-labelledby="accounts-heading">
           <!-- Heading Section -->
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
@@ -649,6 +733,7 @@
             </button>
           </div>
         </section>
+        {/if}
       {/if}
 
       <!-- ==================== VIEW 2: CAMPAIGN SETUP WIZARD ==================== -->
