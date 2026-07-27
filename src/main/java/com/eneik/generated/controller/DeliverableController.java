@@ -26,9 +26,6 @@ public class DeliverableController {
      */
     @GetMapping({
         "/api/deliverables/readiness",
-        "/api/project/readiness",
-        "/api/readiness",
-        "/api/metrics/readiness",
         "/api/project/state"
     })
     public ResponseEntity<Map<String, Object>> getReadinessStatus() {

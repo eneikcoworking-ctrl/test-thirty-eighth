@@ -42,9 +42,6 @@ public class DeliverableReadinessTrackingTests {
         // Test GET API endpoints for readiness
         String[] readinessEndpoints = {
             "/api/deliverables/readiness",
-            "/api/project/readiness",
-            "/api/readiness",
-            "/api/metrics/readiness",
             "/api/project/state"
         };
 
@@ -70,7 +67,7 @@ public class DeliverableReadinessTrackingTests {
         assertThat(updated).isEqualTo(1);
 
         // Verify that completed count is now 6, and ratio is 6/19 (~31.57%)
-        mockMvc.perform(get("/api/project/readiness"))
+        mockMvc.perform(get("/api/project/state"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completed", is(6)))
                 .andExpect(jsonPath("$.total", is(19)))
@@ -89,7 +86,7 @@ public class DeliverableReadinessTrackingTests {
         }
 
         // Verify denominator is now 36, completed is still 5
-        mockMvc.perform(get("/api/project/readiness"))
+        mockMvc.perform(get("/api/project/state"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completed", is(5)))
                 .andExpect(jsonPath("$.total", is(36)))
@@ -105,7 +102,7 @@ public class DeliverableReadinessTrackingTests {
         }
 
         // Verify denominator is 36, completed is 30, ratio is 30/36 (~83.33%)
-        mockMvc.perform(get("/api/project/readiness"))
+        mockMvc.perform(get("/api/project/state"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completed", is(30)))
                 .andExpect(jsonPath("$.total", is(36)))
@@ -137,7 +134,7 @@ public class DeliverableReadinessTrackingTests {
                 .andExpect(jsonPath("$.status", is("MERGED")));
 
         // Verify readiness reflects the update (6 completed now, and 20 total)
-        mockMvc.perform(get("/api/readiness"))
+        mockMvc.perform(get("/api/project/state"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completed", is(6)))
                 .andExpect(jsonPath("$.total", is(20)));
