@@ -20,4 +20,11 @@ public interface DeliverableRepository extends JpaRepository<Deliverable, String
             @Param("oldStatus") String oldStatus,
             @Param("newStatus") String newStatus
     );
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Deliverable d SET d.name = :name WHERE d.id = :id")
+    int updateNameById(
+            @Param("id") String id,
+            @Param("name") String name
+    );
 }
